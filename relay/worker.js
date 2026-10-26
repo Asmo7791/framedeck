@@ -73,7 +73,10 @@ async function activations(request, env, path) {
   if (request.method !== 'POST') return json({ error: 'Not found' }, 404);
   if (!env.ACTIVATIONS) return json({ error: 'Key activation isn\'t set up on this relay' }, 503);
   const admin = path.startsWith('/admin/');
-  if (admin && (!env.ADMIN_TOKEN || request.headers.get('authorization') !== 'Bearer ' + env.ADMIN_TOKEN)) return json({ error: 'Not allowed' }, 403);
+  // Trimmed, since a pasted secret easily picks up a line break.
+  const adminToken = String(env.ADMIN_TOKEN || '').trim();
+  if (admin && !adminToken) return json({ error: 'The relay has no ADMIN_TOKEN secret yet' }, 403);
+  if (admin && (request.headers.get('authorization') || '').trim() !== 'Bearer ' + adminToken) return json({ error: 'Not allowed' }, 403);
   let body;
   try { body = await request.json(); } catch { return json({ error: 'Bad request' }, 400); }
   const key = await realKey(body.key, env.SUPPORTER_PUBLIC_KEY || SUPPORTER_PUBLIC_KEY);

@@ -12,8 +12,8 @@ import { fileURLToPath } from 'url';
 const here = path.dirname(fileURLToPath(import.meta.url));
 const { relayUrl } = createRequire(import.meta.url)('../src/relay.js');
 const [action, key] = process.argv.slice(2);
-if (!['status', 'reset'].includes(action) || !key) {
-  console.error('Usage: node tools/supporter-key-admin.mjs status|reset "FD1-…"');
+if (!['status', 'reset'].includes(action) || !key || key.includes('…')) {
+  console.error('Usage: node tools/supporter-key-admin.mjs status|reset "FD1-…"\n(Replace FD1-… with the supporter\'s whole key.)');
   process.exit(1);
 }
 const tokenFile = path.join(here, '..', 'keys', 'relay-admin-token.txt');
@@ -25,5 +25,9 @@ const r = await fetch(`${relayUrl()}/admin/${action}`, {
   body: JSON.stringify({ key: key.trim() }),
 });
 const d = await r.json().catch(() => ({}));
-if (!r.ok) { console.error(`Failed: ${d.error || 'HTTP ' + r.status}`); process.exit(1); }
+if (!r.ok) {
+  const hint = d.error === 'Not allowed' ? `\nThe token in ${tokenFile} doesn't match the ADMIN_TOKEN secret on the Cloudflare worker. Set the secret to the file's contents and deploy.` : '';
+  console.error(`Failed: ${d.error || 'HTTP ' + r.status}${hint}`);
+  process.exit(1);
+}
 console.log(action === 'reset' ? `Reset. The key can now be unlocked on ${d.limit} new computers.` : `Unlocked on ${d.used} of ${d.limit} computers.`);
