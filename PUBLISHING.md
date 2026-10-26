@@ -32,7 +32,7 @@ git tag v0.2.0
 git push --tags
 ```
 
-GitHub builds the installers on real Mac, Windows and Linux machines (about 15 minutes; watch the **Actions** tab): a `.dmg` for Mac, a setup `.exe` for Windows, `.AppImage` and `.deb` for Linux and Raspberry Pi, plus portable zips. They're attached to a **draft** release. Open **Releases**, check the files, paste the notes from `CHANGELOG.md`, and click **Publish release**.
+GitHub builds the installers on real Mac, Windows and Linux machines (about 15 minutes; watch the **Actions** tab): one `.dmg` for all Macs, one setup `.exe` for all Windows PCs, `.AppImage` and `.deb` for Linux and Raspberry Pi, plus portable zips. File names have no version number, so the README's download links always point at the newest published release. They're attached to a **draft** release. Open **Releases**, check the files, paste the notes from `CHANGELOG.md`, and click **Publish release**.
 
 Every push also runs `.github/workflows/check.yml` (the same as `npm run check`).
 

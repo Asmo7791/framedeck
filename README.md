@@ -16,20 +16,16 @@ Weather data comes from [Open-Meteo](https://open-meteo.com) (free for non-comme
 
 ## Download
 
-Get the latest version from the **[Releases page](https://github.com/Asmo7791/framedeck/releases/latest)**.
+### **[⬇ Download FrameDeck](https://framedeck-relay.kagura8790.workers.dev/download)**
 
-| System | File to download |
+That link picks the right file for your computer. Or choose yourself:
+
+| System | Download |
 |---|---|
-| Mac with Apple silicon (M1 and newer) | `FrameDeck-<version>-mac-arm64.dmg` |
-| Mac with Intel | `FrameDeck-<version>-mac-x64.dmg` |
-| Windows 10/11 (most PCs) | `FrameDeck-<version>-windows-x64-setup.exe` |
-| Windows on ARM (Surface Pro X, Snapdragon laptops) | `FrameDeck-<version>-windows-arm64-setup.exe` |
-| Linux (most PCs) | `FrameDeck-<version>-linux-x64.AppImage`, or the `.deb` for Ubuntu/Debian |
-| Raspberry Pi, 64-bit OS (Pi 4/5) | the `linux-arm64` `.deb` or `.AppImage` |
-| Raspberry Pi, 32-bit OS | the `linux-armv7l` `.deb` |
+| Mac (Apple silicon or Intel, macOS 12 or newer) | [FrameDeck-mac.dmg](https://github.com/Asmo7791/framedeck/releases/latest/download/FrameDeck-mac.dmg) |
+| Windows 10/11 (x64 or ARM) | [FrameDeck-windows-setup.exe](https://github.com/Asmo7791/framedeck/releases/latest/download/FrameDeck-windows-setup.exe) |
+| Linux and Raspberry Pi | Run the command below |
 | iPhone, iPad, Android | No download: open a screen's link and **Add to Home Screen** (see Guides in the app) |
-
-Mac versions need macOS 12 or newer. Portable `.zip` / `.tar.gz` versions are on the Releases page too.
 
 **Mac:** open the `.dmg` and drag FrameDeck into Applications. The app isn't notarized by Apple yet, so the first time, macOS says it can't check it for malware. Click **Done**, then go to **System Settings → Privacy & Security**, scroll down and click **Open Anyway**. Or run this once in Terminal, then open it normally:
 
@@ -37,9 +33,15 @@ Mac versions need macOS 12 or newer. Portable `.zip` / `.tar.gz` versions are on
 xattr -cr /Applications/FrameDeck.app
 ```
 
-**Windows:** run the setup `.exe`. The app isn't signed yet, so if Windows says it protected your PC, click **More info → Run anyway**.
+**Windows:** run the setup `.exe`; it installs the right version for your PC. The app isn't signed yet, so if Windows says it protected your PC, click **More info → Run anyway**.
 
-**Linux / Raspberry Pi:** install the `.deb` with `sudo apt install ./FrameDeck-….deb`, or make the `.AppImage` executable (`chmod +x`) and run it.
+**Linux and Raspberry Pi:** paste this into a terminal. It works out your machine (PC, Pi 4/5, or 32-bit Pi OS) and installs the right package:
+
+```
+curl -fsSL https://raw.githubusercontent.com/Asmo7791/framedeck/main/install.sh | sh
+```
+
+Portable `.zip` / `.tar.gz` versions and every other file are on the [Releases page](https://github.com/Asmo7791/framedeck/releases/latest).
 
 ## Using it
 

@@ -133,6 +133,14 @@ try {
     upstream.length = 0;
     const again = await relay.fetch(new Request('http://relay/pandascore/lol/matches/past?per_page=10'), { PANDASCORE_TOKEN: 'relay-secret' }, { waitUntil() {} });
     ok(again.headers.get('x-relay-cache') === 'memory' && upstream.length === 0, 'the relay answers repeats from its cache');
+    const dl = (ua, q = '') => relay.fetch(new Request('http://relay/download' + q, { headers: { 'user-agent': ua } }), {}, { waitUntil() {} });
+    const loc = (r) => r.headers.get('location') || '';
+    ok(loc(await dl('Mozilla/5.0 (Windows NT 10.0; Win64; x64)')).endsWith('/releases/latest/download/FrameDeck-windows-setup.exe'), '/download sends Windows to the installer');
+    ok(loc(await dl('Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)')).endsWith('/FrameDeck-mac.dmg'), '/download sends Macs to the dmg');
+    const linux = await dl('Mozilla/5.0 (X11; Linux aarch64)');
+    ok(linux.status === 200 && (await linux.text()).includes('install.sh | sh'), '/download shows Linux the install command');
+    ok((await (await dl('Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X)')).text()).includes('Add to Home Screen'), '/download tells phones no download is needed');
+    ok(loc(await dl('Mozilla/5.0 (X11; Linux x86_64)', '?os=windows')).endsWith('FrameDeck-windows-setup.exe'), '/download?os= picks a system');
   } finally {
     delete process.env.FRAMEDECK_ESPORTS_RELAY;
     globalThis.fetch = realFetch;

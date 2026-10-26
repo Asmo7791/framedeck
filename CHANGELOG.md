@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.3.1
+
+- **Easier downloads**: one Mac app for Apple silicon and Intel, one Windows installer that picks x64 or ARM by itself, and a one-line install command for Linux and Raspberry Pi that detects the machine.
+- A single [Download FrameDeck](https://framedeck-relay.kagura8790.workers.dev/download) link sends each visitor the right file.
+
 ## 0.3.0
 
 - **Chinese interface**: FrameDeck now speaks 简体中文 and 繁體中文 as well as English, including the guides, the Widget Studio reference, the display page and the app menu.

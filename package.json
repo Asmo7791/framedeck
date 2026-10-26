@@ -1,6 +1,6 @@
 {
   "name": "framedeck",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "description": "Design your own dashboard screens for any display: monitors, tablets, round cooler LCDs and more",
   "main": "src/main.js",
   "scripts": {
@@ -65,15 +65,13 @@
         {
           "target": "dmg",
           "arch": [
-            "arm64",
-            "x64"
+            "universal"
           ]
         },
         {
           "target": "zip",
           "arch": [
-            "arm64",
-            "x64"
+            "universal"
           ]
         }
       ],
@@ -85,11 +83,11 @@
         "NSLocalNetworkUsageDescription": "FrameDeck shares your screens with tablets, phones and other computers on your network when you turn on network sharing."
       },
       "notarize": true,
-      "artifactName": "${productName}-${version}-mac-${arch}.${ext}"
+      "artifactName": "${productName}-mac.${ext}"
     },
     "dmg": {
       "title": "FrameDeck ${version}",
-      "artifactName": "${productName}-${version}-mac-${arch}.${ext}"
+      "artifactName": "${productName}-mac.${ext}"
     },
     "win": {
       "icon": "build/icon.ico",
@@ -109,7 +107,7 @@
           ]
         }
       ],
-      "artifactName": "${productName}-${version}-windows-${arch}.${ext}"
+      "artifactName": "${productName}-windows-${arch}.${ext}"
     },
     "nsis": {
       "oneClick": false,
@@ -117,7 +115,7 @@
       "allowToChangeInstallationDirectory": true,
       "createDesktopShortcut": true,
       "shortcutName": "FrameDeck",
-      "artifactName": "${productName}-${version}-windows-${arch}-setup.${ext}"
+      "artifactName": "${productName}-windows-setup.${ext}"
     },
     "linux": {
       "icon": "build/icon.png",
@@ -148,7 +146,7 @@
         }
       ],
       "maintainer": "Kai-Tung Yu <124535894+Asmo7791@users.noreply.github.com>",
-      "artifactName": "${productName}-${version}-linux-${arch}.${ext}"
+      "artifactName": "${productName}-linux-${arch}.${ext}"
     },
     "publish": [
       {

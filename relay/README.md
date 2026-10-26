@@ -1,4 +1,8 @@
-# FrameDeck esports relay
+# FrameDeck relay
+
+It also serves **`/download`**: one link that sends Mac visitors to `FrameDeck-mac.dmg`, Windows visitors to `FrameDeck-windows-setup.exe`, and shows Linux, Raspberry Pi and phone visitors what to do instead. Add `?os=mac`, `?os=windows` or `?os=linux` to choose.
+
+## Esports relay
 
 A tiny [Cloudflare Worker](https://workers.cloudflare.com) that lets every FrameDeck user see esports scores (League of Legends, CS2, Valorant, Overwatch, Rainbow Six, Rocket League) without their own PandaScore token.
 

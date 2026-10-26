@@ -1,4 +1,7 @@
-// FrameDeck esports relay (a Cloudflare Worker).
+// FrameDeck relay (a Cloudflare Worker): the esports relay, plus /download, one link that
+// sends each visitor the right FrameDeck download for their system.
+//
+// Esports relay:
 // Answers esports match requests for every FrameDeck user with one PandaScore token and
 // caches the answers, so any number of users only cost a few PandaScore requests.
 // The token is a Worker secret (PANDASCORE_TOKEN); it never reaches the app.
@@ -22,10 +25,57 @@ function answer(body, ttl, source) {
   });
 }
 
+// ---------- /download ----------
+const REPO = 'https://github.com/Asmo7791/framedeck';
+const LATEST = REPO + '/releases/latest/download/';
+const FILES = { mac: 'FrameDeck-mac.dmg', windows: 'FrameDeck-windows-setup.exe' };
+const INSTALL = 'curl -fsSL https://raw.githubusercontent.com/Asmo7791/framedeck/main/install.sh | sh';
+
+// Which system the visitor is on: "mac", "windows", "linux", "phone" or "" (unknown).
+function systemOf(request) {
+  const hint = (request.headers.get('sec-ch-ua-platform') || '').replace(/"/g, '').toLowerCase();
+  const ua = request.headers.get('user-agent') || '';
+  if (/iphone|ipad|ipod|android/i.test(ua) || hint === 'android' || hint === 'ios') return 'phone';
+  if (hint === 'windows' || /windows/i.test(ua)) return 'windows';
+  if (hint === 'macos' || /macintosh|mac os x/i.test(ua)) return 'mac';
+  if (hint === 'linux' || hint === 'chrome os' || /linux|cros|x11/i.test(ua)) return 'linux';
+  return '';
+}
+
+function downloadPage(system) {
+  const lead = system === 'linux'
+    ? `<p>On Linux or a Raspberry Pi, paste this into a terminal. It picks the right package for your machine:</p><pre>${INSTALL}</pre>`
+    : system === 'phone'
+      ? '<p>Phones and tablets don\'t need a download. Install FrameDeck on a computer, turn on <b>Settings → Share displays on my network</b>, open a screen\'s link on the phone or tablet, and choose <b>Add to Home Screen</b>.</p>'
+      : '<p>Pick your system:</p>';
+  return `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Download FrameDeck</title><style>
+body { font: 16px/1.5 -apple-system, "Segoe UI", sans-serif; max-width: 560px; margin: 8vh auto; padding: 0 20px; background: #0b0d11; color: #e7e9ee; }
+a { color: #ff8a3d; } pre { background: #1a1e26; padding: 12px 14px; border-radius: 10px; white-space: pre-wrap; word-break: break-all; }
+li { margin: 6px 0; } small { color: #8b94a3; }
+</style></head><body>
+<h1>Download FrameDeck</h1>${lead}
+<ul>
+<li><a href="${LATEST}${FILES.mac}">Mac</a> <small>(Apple silicon and Intel, macOS 12 or newer)</small></li>
+<li><a href="${LATEST}${FILES.windows}">Windows 10/11</a> <small>(x64 and ARM)</small></li>
+<li>Linux and Raspberry Pi: <code>${INSTALL}</code></li>
+</ul>
+<p><small>Every file, including portable zips: <a href="${REPO}/releases/latest">Releases page</a> · Help: <a href="${REPO}/wiki/Installing">Installing</a></small></p>
+</body></html>`;
+}
+
+function download(request) {
+  const url = new URL(request.url);
+  const system = (url.searchParams.get('os') || systemOf(request)).toLowerCase();
+  if (FILES[system]) return Response.redirect(LATEST + FILES[system], 302);
+  return new Response(downloadPage(system), { headers: { 'content-type': 'text/html; charset=utf-8', 'cache-control': 'no-store', vary: 'user-agent, sec-ch-ua-platform' } });
+}
+
 export default {
   async fetch(request, env, ctx) {
     const url = new URL(request.url);
     if (url.pathname === '/') return json({ ok: true, service: 'FrameDeck esports relay' });
+    if (url.pathname === '/download' || url.pathname === '/download/') return download(request);
     const m = /^\/pandascore\/([a-z0-9]+)\/matches\/(running|upcoming|past)$/.exec(url.pathname);
     if (request.method !== 'GET' || !m || !GAMES.has(m[1])) return json({ error: 'Not found' }, 404);
     if (!env.PANDASCORE_TOKEN) return json({ error: 'The relay has no PandaScore token yet' }, 503);
