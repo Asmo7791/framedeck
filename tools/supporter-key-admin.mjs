@@ -12,7 +12,7 @@ import { fileURLToPath } from 'url';
 const here = path.dirname(fileURLToPath(import.meta.url));
 const { relayUrl } = createRequire(import.meta.url)('../src/relay.js');
 const [action, key] = process.argv.slice(2);
-if (!['status', 'reset'].includes(action) || !key || key.includes('…')) {
+if (!['status', 'reset'].includes(action) || !/^FD1-[A-Za-z0-9_-]{20,}\.[A-Za-z0-9_-]{40,}$/.test(String(key || '').replace(/\s+/g, ''))) {
   console.error('Usage: node tools/supporter-key-admin.mjs status|reset "FD1-…"\n(Replace FD1-… with the supporter\'s whole key.)');
   process.exit(1);
 }
