@@ -32,8 +32,13 @@ jobs:
           cache: npm
       - run: npm ci
       - name: Build and upload
-        # Without a Mac certificate, sign ad-hoc so Apple silicon Macs can still open the app.
-        run: npx electron-builder ${{ matrix.args }} ${{ matrix.os == 'macos-latest' && secrets.MAC_CERT_P12_BASE64 == '' && '-c.mac.identity=-' || '' }} --publish always
+        shell: bash
+        # A missing secret arrives as an empty value, which electron-builder reads as a
+        # certificate path, so clear it. Without a Mac certificate, sign ad-hoc so Apple
+        # silicon Macs can still open the app.
+        run: |
+          if [ -z "$CSC_LINK" ]; then unset CSC_LINK CSC_KEY_PASSWORD; fi
+          npx electron-builder ${{ matrix.args }} ${{ matrix.os == 'macos-latest' && secrets.MAC_CERT_P12_BASE64 == '' && '-c.mac.identity=-' || '' }} --publish always
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           # Mac signing + notarization (optional until you join the Apple Developer Program).
