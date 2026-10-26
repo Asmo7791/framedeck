@@ -19,6 +19,10 @@ You need a free [Cloudflare account](https://dash.cloudflare.com/sign-up) and a 
 3. Go to the worker's **Settings → Variables and Secrets → Add**: type **Secret**, name `PANDASCORE_TOKEN`, value: your PandaScore token. Save.
 4. Open the worker's address (like `https://framedeck-relay.<your-name>.workers.dev`). It should say `"service": "FrameDeck esports relay"`.
 
+### Or build it from GitHub
+
+If you connect the worker to this GitHub repository (**Workers & Pages → Create → Import a repository**), open the worker's **Settings → Build** and set **Root directory** to `relay`. The deploy command stays `npx wrangler deploy`. Then add the `PANDASCORE_TOKEN` secret as in step 3 above. The worker's name must be `framedeck-relay` (the name in `wrangler.toml`).
+
 ### Or from Terminal
 
 ```

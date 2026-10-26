@@ -1,4 +1,5 @@
 {
+  "name": "framedeck-relay",
   "private": true,
   "type": "module"
 }
