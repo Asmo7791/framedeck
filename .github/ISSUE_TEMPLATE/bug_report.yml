@@ -1,0 +1,27 @@
+name: Bug report
+description: Something isn't working
+labels: [bug]
+body:
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened?
+      description: What did you do, what did you expect, and what happened instead? Screenshots help.
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: FrameDeck version
+      description: Shown at the bottom of Settings.
+      placeholder: "0.2.0"
+  - type: dropdown
+    id: system
+    attributes:
+      label: System
+      options: [Mac (Apple silicon), Mac (Intel), Windows, Linux, Raspberry Pi, Other]
+  - type: input
+    id: display
+    attributes:
+      label: Where is the screen shown?
+      placeholder: "Monitor, iPad, NZXT Kraken Elite, Pi with 7\" screen…"

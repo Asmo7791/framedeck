@@ -1,0 +1,11 @@
+name: Idea or widget request
+description: Suggest a widget, display type or improvement
+labels: [enhancement]
+body:
+  - type: textarea
+    id: idea
+    attributes:
+      label: What would you like?
+      description: What should it show or do, and on what kind of screen?
+    validations:
+      required: true

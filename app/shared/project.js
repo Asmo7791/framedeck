@@ -2,10 +2,10 @@
 (function () {
   const FD = (window.FD = window.FD || {});
   FD.PROJECT = {
-    github: '',                 // e.g. 'https://github.com/your-name/framedeck'
+    github: 'https://github.com/Asmo7791/framedeck',
     donate: {
       paypal: '',               // your PayPal.me link, e.g. 'https://paypal.me/yourname'
-      venmo: '',                // your Venmo link, e.g. 'https://venmo.com/u/yourname'
+      venmo: 'https://venmo.com/u/asmo7791',
       zelle: '',                // the email or phone number your Zelle uses
     },
     // How supporters get their key after donating.

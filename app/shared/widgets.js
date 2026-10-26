@@ -244,7 +244,7 @@
   };
 
   W.system = {
-    name: 'This Mac', icon: '📈', desc: 'CPU, memory and uptime',
+    name: 'This computer', icon: '📈', desc: 'CPU, memory and uptime',
     def: [4, 3], min: [1, 1], tick: 0, dataEvery: 3000,
     settings: [{ key: 'show', label: 'Show', type: 'select', default: 'all', options: [['all', 'CPU + memory'], ['cpu', 'CPU only'], ['memory', 'Memory only']] }],
     data: (s, ctx) => ctx.fetchJSON('/api/system'),

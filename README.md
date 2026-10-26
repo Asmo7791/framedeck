@@ -1,6 +1,6 @@
 # FrameDeck
 
-![Platforms](https://img.shields.io/badge/platforms-macOS%20%7C%20Windows%20%7C%20Linux%20%7C%20Raspberry%20Pi-ff8a3d) ![License: MIT](https://img.shields.io/badge/license-MIT-blue)
+[![Release](https://img.shields.io/github/v/release/Asmo7791/framedeck?include_prereleases)](https://github.com/Asmo7791/framedeck/releases/latest) ![Platforms](https://img.shields.io/badge/platforms-macOS%20%7C%20Windows%20%7C%20Linux%20%7C%20Raspberry%20Pi-ff8a3d) ![License: MIT](https://img.shields.io/badge/license-MIT-blue)
 
 Design your own dashboard screens and show them on any display: a spare monitor, your laptop screen, a tablet or old phone on your Wi-Fi, a round cooler-style screen, or an e-ink panel.
 
@@ -14,28 +14,30 @@ Weather data comes from [Open-Meteo](https://open-meteo.com) (free for non-comme
 
 ## Download
 
-| System | File |
+Get the latest version from the **[Releases page](https://github.com/Asmo7791/framedeck/releases/latest)**.
+
+| System | File to download |
 |---|---|
-| Mac with Apple silicon (M1 and newer) | `FrameDeck-…-mac-apple-silicon.zip` |
-| Mac with Intel | `FrameDeck-…-mac-intel.zip` |
-| Windows 10/11 (most PCs) | `FrameDeck-…-windows-x64.zip` |
-| Windows on ARM (Surface Pro X, Snapdragon laptops) | `FrameDeck-…-windows-arm64.zip` |
-| Linux | `FrameDeck-…-linux-x64.tar.gz` |
-| Raspberry Pi, 64-bit OS (Pi 4/5) | `FrameDeck-…-linux-arm64-raspberry-pi-64bit.tar.gz` |
-| Raspberry Pi, 32-bit OS | `FrameDeck-…-linux-armv7l-raspberry-pi-32bit.tar.gz` |
+| Mac with Apple silicon (M1 and newer) | `FrameDeck-<version>-mac-arm64.dmg` |
+| Mac with Intel | `FrameDeck-<version>-mac-x64.dmg` |
+| Windows 10/11 (most PCs) | `FrameDeck-<version>-windows-x64-setup.exe` |
+| Windows on ARM (Surface Pro X, Snapdragon laptops) | `FrameDeck-<version>-windows-arm64-setup.exe` |
+| Linux (most PCs) | `FrameDeck-<version>-linux-x64.AppImage`, or the `.deb` for Ubuntu/Debian |
+| Raspberry Pi, 64-bit OS (Pi 4/5) | the `linux-arm64` `.deb` or `.AppImage` |
+| Raspberry Pi, 32-bit OS | the `linux-armv7l` `.deb` |
 | iPhone, iPad, Android | No download: open a screen's link and **Add to Home Screen** (see Guides in the app) |
 
-Each download has a **READ ME FIRST** file with install steps. Mac versions need macOS 12 or newer.
+Mac versions need macOS 12 or newer. Portable `.zip` / `.tar.gz` versions are on the Releases page too.
 
-**Mac:** drag FrameDeck.app into Applications. Until the app is signed by Apple, run this once in Terminal:
+**Mac:** open the `.dmg` and drag FrameDeck into Applications. The app isn't notarized by Apple yet, so the first time, macOS says it can't check it for malware. Click **Done**, then go to **System Settings → Privacy & Security**, scroll down and click **Open Anyway**. Or run this once in Terminal, then open it normally:
 
 ```
-xattr -cr /Applications/FrameDeck.app && codesign --force --deep --sign - /Applications/FrameDeck.app
+xattr -cr /Applications/FrameDeck.app
 ```
 
-**Windows:** unzip and run FrameDeck.exe. If Windows says it protected your PC, click **More info → Run anyway**.
+**Windows:** run the setup `.exe`. The app isn't signed yet, so if Windows says it protected your PC, click **More info → Run anyway**.
 
-**Linux / Raspberry Pi:** extract and run `./install-linux.sh`.
+**Linux / Raspberry Pi:** install the `.deb` with `sudo apt install ./FrameDeck-….deb`, or make the `.AppImage` executable (`chmod +x`) and run it.
 
 ## Using it
 
@@ -54,7 +56,7 @@ Your layouts are stored in FrameDeck's data folder (Help → Open Data Folder).
 
 ## Widgets
 
-Clock (digital/analog, any time zone), Date (English, 中文 and more), Month calendar, Weather, Countdown, Progress (year/month/week/day), This Mac (CPU/memory), Text, Image & video (photos, GIFs, looping videos up to 60 s), Hacker News and News feed (any RSS; tap a headline to read it), World clocks, Calendar events (any iCal link, e.g. Google Calendar), Sports scores, Crypto prices, Air quality, Sun & moon, Now playing (Spotify / Music), Rotating text, Kraken stats (liquid/CPU/GPU temperatures from NZXT CAM), Web page.
+Clock (digital/analog, any time zone), Date (English, 中文 and more), Month calendar, Weather, Countdown, Progress (year/month/week/day), This computer (CPU/memory), Text, Image & video (photos, GIFs, looping videos up to 60 s), Hacker News and News feed (any RSS; tap a headline to read it), World clocks, Calendar events (any iCal link, e.g. Google Calendar), Sports scores, Crypto prices, Air quality, Sun & moon, Now playing (Spotify / Music), Rotating text, Kraken stats (liquid/CPU/GPU temperatures from NZXT CAM), Web page.
 
 ## Your own widgets (Widget Studio)
 
@@ -83,9 +85,16 @@ FrameDeck is free. If you find it useful, the **♥ Support** button in the app 
 ```
 npm install
 npm start              # run from source
+npm run check          # syntax check + quick server test (also runs on every push)
 npm run dist           # build installers for this computer's system into release/
 ```
 
-Pushing a version tag (`git tag v0.2.1 && git push --tags`) builds every platform on GitHub Actions. See PUBLISHING.md.
+Pushing a version tag (`git tag v0.2.1 && git push --tags`) builds every platform on GitHub Actions. See [PUBLISHING.md](PUBLISHING.md).
 
 `src/` is the Electron app and local server, `app/` is the editor and display pages, `app/shared/widgets.js` is the widget library.
+
+Bug reports and ideas are welcome in [Issues](https://github.com/Asmo7791/framedeck/issues); see [CONTRIBUTING.md](CONTRIBUTING.md). For security problems, see [SECURITY.md](SECURITY.md).
+
+## License
+
+[MIT](LICENSE) © 2026 Kai-Tung Yu

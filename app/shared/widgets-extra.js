@@ -365,7 +365,7 @@
   };
 
   W.nowplaying = {
-    name: 'Now playing', icon: '🎵', desc: 'Spotify or Apple Music on this Mac',
+    name: 'Now playing', icon: '🎵', desc: 'Spotify or Apple Music (Mac only)',
     def: [6, 3], min: [2, 1], dataEvery: 3000,
     settings: [{ key: 'art', label: 'Show album art', type: 'toggle', default: true }],
     data: (s, ctx) => ctx.fetchJSON('/api/nowplaying'),

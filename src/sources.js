@@ -4,7 +4,7 @@ const dns = require('dns').promises;
 const net = require('net');
 const { execFile } = require('child_process');
 
-const UA = { 'user-agent': 'FrameDeck/0.2 (+https://github.com/Feeengyuuu/EpaperSystem inspired)' };
+const UA = { 'user-agent': 'FrameDeck/0.2 (+https://github.com/Asmo7791/framedeck)' };
 
 // ---------- safe fetching ----------
 function isPrivateIp(ip) {
@@ -20,7 +20,7 @@ function isPrivateIp(ip) {
 
 // Fetch a URL. Requests that come from other devices on the network may only
 // reach public addresses, so a shared display can't be used to probe your LAN.
-// Requests from this Mac may reach local services (Home Assistant, a Pi, ...).
+// Requests from this computer may reach local services (Home Assistant, a Pi, ...).
 async function safeFetch(rawUrl, { allowPrivate = false, maxBytes = 3 * 1024 * 1024, timeout = 12000 } = {}) {
   let url = String(rawUrl || '').trim().replace(/^webcal:/i, 'https:');
   for (let hop = 0; hop < 4; hop++) {
@@ -30,7 +30,7 @@ async function safeFetch(rawUrl, { allowPrivate = false, maxBytes = 3 * 1024 * 1
     if (!allowPrivate) {
       const host = u.hostname.replace(/^\[|\]$/g, '');
       const addrs = net.isIP(host) ? [{ address: host }] : await dns.lookup(host, { all: true });
-      if (addrs.some((a) => isPrivateIp(a.address))) throw Object.assign(new Error('Local network addresses only work on this Mac'), { status: 403 });
+      if (addrs.some((a) => isPrivateIp(a.address))) throw Object.assign(new Error('Local network addresses only work on the computer running FrameDeck'), { status: 403 });
     }
     const r = await fetch(url, { headers: UA, redirect: 'manual', signal: AbortSignal.timeout(timeout) });
     if (r.status >= 300 && r.status < 400 && r.headers.get('location')) { url = new URL(r.headers.get('location'), url).toString(); continue; }
@@ -82,7 +82,7 @@ function parseIcsDate(v, params) {
   if (!m) return null;
   const [, y, mo, d, h, mi, s, z] = m;
   if (h === undefined || /VALUE=DATE(?!-)/.test(params || '')) return { date: new Date(+y, +mo - 1, +d), allDay: true };
-  // TZID times are treated as this Mac's local time, which is right for most personal calendars.
+  // TZID times are treated as this computer's local time, which is right for most personal calendars.
   return { date: z ? new Date(Date.UTC(+y, +mo - 1, +d, +h, +mi, +s)) : new Date(+y, +mo - 1, +d, +h, +mi, +s), allDay: false };
 }
 

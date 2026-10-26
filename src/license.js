@@ -7,7 +7,7 @@ const fs = require('fs');
 const path = require('path');
 
 const PUBLIC_KEY = `-----BEGIN PUBLIC KEY-----
-MCowBQYDK2VwAyEAWf6ttGiX2VOPaH+pRAsiKLMuOe7xRj0UpJvSNzqYP60=
+MCowBQYDK2VwAyEAZe8d7frOPBw9SbZ1KkhzvuS51zNDSKVl/35OxI3qgEI=
 -----END PUBLIC KEY-----`;
 
 const b64u = (s) => Buffer.from(s.replace(/-/g, '+').replace(/_/g, '/'), 'base64');

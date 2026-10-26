@@ -601,7 +601,7 @@
       }).join('') : '<p class="note">Connected displays show up here when FrameDeck runs as the app.</p>'}
       <div class="btn-row"><button class="btn small" data-window="1">Open in a window</button>
         ${openHere.length ? `<button class="btn small ghost" data-closeall="1">Stop all (${openHere.length})</button>` : ''}</div>
-      <div class="field"><span>Link for a browser on this Mac</span><div class="link-box"><input readonly value="${esc(localUrl)}"><button class="btn small" data-copy="${esc(localUrl)}">Copy</button></div></div>
+      <div class="field"><span>Link for a browser on this computer</span><div class="link-box"><input readonly value="${esc(localUrl)}"><button class="btn small" data-copy="${esc(localUrl)}">Copy</button></div></div>
       ${lan ? `<div class="field"><span>Link for a phone, tablet or other computer on your Wi-Fi</span><div class="link-box"><input readonly value="${esc(lan)}"><button class="btn small" data-copy="${esc(lan)}">Copy</button></div></div>`
         : '<p class="note">Turn on network sharing in Settings to show this screen on a tablet, old phone or another computer.</p>'}
       <p class="note">In a display window: ← → changes page, Esc closes it.</p>`;
@@ -623,7 +623,7 @@
     pop.innerHTML = `
       <h3>Settings</h3>
       <div class="field inline"><span>Share displays on my network</span><label class="switch"><input type="checkbox" id="lanToggle" ${cfg.shareOnLan ? 'checked' : ''}><i></i></label></div>
-      <p class="note">Lets phones, tablets and other computers on your Wi-Fi open display links. The editor stays on this Mac only.</p>
+      <p class="note">Lets phones, tablets and other computers on your Wi-Fi open display links. The editor stays on this computer only.</p>
       ${info.loginItem !== null && info.loginItem !== undefined ? `<div class="field inline"><span>Open FrameDeck when I log in</span><label class="switch"><input type="checkbox" id="loginToggle" ${info.loginItem ? 'checked' : ''}><i></i></label></div>
       <p class="note">Displays that were showing when you quit open again automatically.</p>` : ''}
       ${isSupporter() ? `<p class="note">♥ Supporter: ${esc(info.supporter.name)}</p>` : ''}
@@ -1309,7 +1309,7 @@
   }
   function shareStep() {
     return lanBase()
-      ? `<p class="ok">✓ Network sharing is on. This Mac is at <b>${esc(lanBase().replace('http://', ''))}</b>.</p>`
+      ? `<p class="ok">✓ Network sharing is on. This computer is at <b>${esc(lanBase().replace('http://', ''))}</b>.</p>`
       : `<p>Network sharing is off.</p><button class="btn small primary" data-gact="lan-on">Turn on network sharing</button>
          <p class="note">The first time, macOS may ask whether FrameDeck can accept incoming network connections. Click <b>Allow</b>.</p>`;
   }
@@ -1387,13 +1387,13 @@
               <li>Go to the <b>Lighting</b> tab, open the <b>Mode</b> menu for the LCD and choose <b>Web Integration</b>.</li>
               <li>Next to <b>Custom</b>, click <b>Edit</b>, paste the link into the <b>URL</b> field and click the arrow.</li></ol>
             Your FrameDeck screen appears on the cooler within a few seconds.</li>
-          <li><b>Keep it running.</b> The Mac has to stay on and awake for the Kraken to update. In System Settings → <b>Battery</b> (or <b>Energy</b>) → Options, turn on <b>Prevent automatic sleeping when the display is off</b> while plugged in. In your router's settings, give the Mac a <b>reserved IP address</b> so the link keeps working.</li>
+          <li><b>Keep it running.</b> The computer running FrameDeck has to stay on and awake for the Kraken to update. On a Mac, go to System Settings → <b>Battery</b> (or <b>Energy</b>) → Options and turn on <b>Prevent automatic sleeping when the display is off</b> while plugged in. In your router's settings, give that computer a <b>reserved IP address</b> so the link keeps working.</li>
         </ol>
         <h3>Troubleshooting</h3>
         <ul class="trouble">
-          <li><b>The link doesn't open on the PC.</b> Check both computers are on the same network (not a guest Wi-Fi), that network sharing is on, and that macOS's firewall allows FrameDeck (System Settings → Network → Firewall → Options).</li>
+          <li><b>The link doesn't open on the PC.</b> Check both computers are on the same network (not a guest Wi-Fi), that network sharing is on, and that the firewall on the computer running FrameDeck allows it (on a Mac: System Settings → Network → Firewall → Options; on Windows, allow FrameDeck when Windows asks).</li>
           <li><b>The Kraken shows an old layout or nothing.</b> CAM only reloads when the link changes. Switch the Mode to something else and back to Web Integration.</li>
-          <li><b>It worked yesterday but not today.</b> The Mac's address probably changed. Reserve it in your router, then copy the new link here.</li>
+          <li><b>It worked yesterday but not today.</b> The address of the computer running FrameDeck probably changed. Reserve it in your router, then copy the new link here.</li>
           <li><b>Kraken stats shows "No data".</b> Update NZXT CAM to version 4.50 or newer.</li>
         </ul>
         <p class="note">Tip: installing FrameDeck for Windows on the gaming PC skips the network steps entirely.</p>`;

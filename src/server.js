@@ -7,6 +7,7 @@ const http = require('http');
 const fs = require('fs');
 const path = require('path');
 const os = require('os');
+const net = require('net');
 const crypto = require('crypto');
 const { defaultConfig } = require('./defaults');
 const sources = require('./sources');
@@ -80,7 +81,7 @@ function createServer({ dataDir, staticDir, hooks = {}, port = 47820 }) {
     }
   }
   async function getJSON(url) {
-    const r = await fetch(url, { headers: { 'user-agent': 'FrameDeck/0.1' }, signal: AbortSignal.timeout(12000) });
+    const r = await fetch(url, { headers: { 'user-agent': 'FrameDeck/0.2 (+https://github.com/Asmo7791/framedeck)' }, signal: AbortSignal.timeout(12000) });
     if (!r.ok) throw new Error(`HTTP ${r.status} from ${new URL(url).host}`);
     return r.json();
   }
@@ -254,7 +255,7 @@ function createServer({ dataDir, staticDir, hooks = {}, port = 47820 }) {
       return hooks.setLoginItem(!!body.enabled);
     },
   };
-  // Anything that changes state or touches the Mac is only allowed from this computer.
+  // Anything that changes state or touches this computer is only allowed from this computer.
   const LOCAL_ONLY = new Set(['PUT /api/config', 'POST /api/media', 'GET /api/displays',
     'POST /api/open-display', 'POST /api/close-display', 'POST /api/login-item', 'POST /api/supporter']);
 
@@ -313,6 +314,9 @@ function createServer({ dataDir, staticDir, hooks = {}, port = 47820 }) {
     const url = new URL(req.url, 'http://local');
     const local = LOOPBACK.has(req.socket.remoteAddress);
     const route = `${req.method} ${url.pathname}`;
+    // Only answer to addresses FrameDeck hands out, so a web page can't point its own
+    // domain at this computer (DNS rebinding) and read or change the config.
+    if (!allowedHost(req.headers.host, local)) return send(res, 421, { error: 'Unknown host' });
     try {
       if (url.pathname === '/api/events') {
         res.writeHead(200, { 'content-type': 'text/event-stream', 'cache-control': 'no-store', connection: 'keep-alive' });
@@ -380,6 +384,16 @@ function createServer({ dataDir, staticDir, hooks = {}, port = 47820 }) {
     save: saveConfig,
     close: () => server.close(),
   };
+}
+
+function allowedHost(header, local) {
+  const m = /^(\[[0-9a-f:.]+\]|[^:]+)(?::\d+)?$/i.exec(String(header || ''));
+  if (!m) return false;
+  const host = m[1].replace(/^\[|\]$/g, '').toLowerCase();
+  if (host === 'localhost' || host.endsWith('.localhost') || net.isIP(host)) return true;
+  // Other devices may also use this computer's name, e.g. http://my-pc.local:47820
+  const name = os.hostname().toLowerCase().replace(/\.local$/, '');
+  return !local && (host === name || host === name + '.local');
 }
 
 function lanAddresses() {

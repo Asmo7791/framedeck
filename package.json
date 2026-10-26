@@ -7,13 +7,14 @@
     "start": "electron .",
     "package:mac": "electron-packager . FrameDeck --platform=darwin --arch=arm64,x64 --out=dist --overwrite --icon=build/icon.icns --app-bundle-id=com.kaitungyu.framedeck --app-category-type=public.app-category.utilities --ignore=^/dist --ignore=^/build/src",
     "dist": "electron-builder --publish never",
-    "dist:mac": "electron-builder --mac --publish never",
+    "dist:mac": "electron-builder --mac --publish never -c.mac.identity=-",
     "dist:win": "electron-builder --win --publish never",
-    "dist:linux": "electron-builder --linux --publish never"
+    "dist:linux": "electron-builder --linux --publish never",
+    "check": "node tools/check.mjs"
   },
   "author": {
     "name": "Kai-Tung Yu",
-    "email": "YOUR-PUBLIC-EMAIL@example.com"
+    "email": "124535894+Asmo7791@users.noreply.github.com"
   },
   "license": "MIT",
   "devDependencies": {
@@ -24,11 +25,24 @@
     "electron-builder": "^26.18.0"
   },
   "productName": "FrameDeck",
-  "homepage": "https://github.com/YOUR-GITHUB-NAME/framedeck",
+  "homepage": "https://github.com/Asmo7791/framedeck",
   "repository": {
     "type": "git",
-    "url": "https://github.com/YOUR-GITHUB-NAME/framedeck.git"
+    "url": "https://github.com/Asmo7791/framedeck.git"
   },
+  "bugs": {
+    "url": "https://github.com/Asmo7791/framedeck/issues"
+  },
+  "keywords": [
+    "dashboard",
+    "electron",
+    "widgets",
+    "nzxt",
+    "kraken",
+    "kiosk",
+    "raspberry-pi",
+    "e-ink"
+  ],
   "build": {
     "appId": "com.kaitungyu.framedeck",
     "productName": "FrameDeck",
@@ -68,10 +82,12 @@
         "NSAppleEventsUsageDescription": "FrameDeck reads what Spotify or Music is playing for the Now playing widget.",
         "NSLocalNetworkUsageDescription": "FrameDeck shares your screens with tablets, phones and other computers on your network when you turn on network sharing."
       },
-      "notarize": true
+      "notarize": true,
+      "artifactName": "${productName}-${version}-mac-${arch}.${ext}"
     },
     "dmg": {
-      "title": "FrameDeck ${version}"
+      "title": "FrameDeck ${version}",
+      "artifactName": "${productName}-${version}-mac-${arch}.${ext}"
     },
     "win": {
       "icon": "build/icon.ico",
@@ -90,14 +106,16 @@
             "arm64"
           ]
         }
-      ]
+      ],
+      "artifactName": "${productName}-${version}-windows-${arch}.${ext}"
     },
     "nsis": {
       "oneClick": false,
       "perMachine": false,
       "allowToChangeInstallationDirectory": true,
       "createDesktopShortcut": true,
-      "shortcutName": "FrameDeck"
+      "shortcutName": "FrameDeck",
+      "artifactName": "${productName}-${version}-windows-${arch}-setup.${ext}"
     },
     "linux": {
       "icon": "build/icon.png",
@@ -127,7 +145,8 @@
           ]
         }
       ],
-      "maintainer": "Kai-Tung Yu <YOUR-PUBLIC-EMAIL@example.com>"
+      "maintainer": "Kai-Tung Yu <124535894+Asmo7791@users.noreply.github.com>",
+      "artifactName": "${productName}-${version}-linux-${arch}.${ext}"
     },
     "publish": [
       {

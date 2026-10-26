@@ -4,36 +4,37 @@ A checklist to go from "works on my Mac" to "anyone can download it". Steps mark
 
 ## 1. Before you publish
 
-- [ ] **Check the name.** Search "FrameDeck" on GitHub, the Mac App Store, the Microsoft Store and Google. If another app uses it, pick a new name now; it's easy to change before release (search the project for `FrameDeck`).
-- [ ] **Fill in your links** in `app/shared/project.js`: your GitHub page and your PayPal.me / Venmo links / Zelle email or phone. Anything left blank is hidden.
-- [ ] **Fill in `package.json`**: replace `YOUR-GITHUB-NAME` (two places) and `YOUR-PUBLIC-EMAIL@example.com` (two places). Use an email you're happy to make public; Linux packages show it.
-- [ ] **Turn on the GitHub Sponsor button**: in `.github/FUNDING.yml`, put in your PayPal.me and Venmo links and remove the `#`.
-- [ ] **Back up your supporter-key private key** (`framedeck-supporter-PRIVATE.pem`) somewhere safe, like a password manager. Never put it on GitHub. If you lose it you can't make new keys; if someone else gets it, they can.
+Already done: your GitHub name, public (noreply) email and Venmo link are filled in (`package.json`, `app/shared/project.js`, `.github/FUNDING.yml`), and a new supporter-key pair was made.
+
+- [ ] **Check the name.** Search "FrameDeck" on GitHub, the Mac App Store, the Microsoft Store and Google. If another app uses it, pick a new name now (search the project for `FrameDeck`).
+- [ ] **Back up your supporter-key private key** (`keys/framedeck-supporter-PRIVATE.pem`) somewhere safe, like a password manager. Git ignores the `keys/` folder so it never goes to GitHub. If you lose it you can't make new keys; if someone else gets it, they can.
+- [ ] **Accept the Xcode license** once, so `git` works on this Mac: `sudo xcodebuild -license accept`.
 
 ## 2. Put it on GitHub
 
-1. Make a free account at github.com if you don't have one.
-2. Click **New repository**, name it `framedeck`, set it to **Public**, and don't add a README (the project has one).
-3. In Terminal, from the project folder:
+1. On github.com, click **New repository**, name it `framedeck`, set it to **Public**, and don't add a README, license or .gitignore (the project has them).
+2. In Terminal, from the project folder:
 
    ```
-   git remote add origin https://github.com/YOUR-GITHUB-NAME/framedeck.git
+   git remote add origin https://github.com/Asmo7791/framedeck.git
    git push -u origin main
    ```
-4. On the repo page, click the gear next to **About**, add a description and the topics `dashboard`, `electron`, `nzxt`, `kraken`, `e-ink`, `widgets`.
+3. On the repo page, click the gear next to **About**, add a description and the topics `dashboard`, `electron`, `nzxt`, `kraken`, `e-ink`, `widgets`.
+4. In **Settings → General → Features**, tick **Sponsorships** to show the Sponsor button (it uses `.github/FUNDING.yml`).
+5. In **Settings → Code security**, turn on **Private vulnerability reporting** (SECURITY.md points people there).
 
 ## 3. Release the downloads
 
-**Easiest:** on GitHub, open **Releases → Draft a new release**, create the tag `v0.2.0`, and drag in the files from the `dist` downloads (Mac, Windows, Linux, Raspberry Pi). Click **Publish release**.
-
-**Automatic (recommended once you're comfortable):** the project includes `.github/workflows/release.yml`. Every time you run
+The project includes `.github/workflows/release.yml`. Push a version tag:
 
 ```
-git tag v0.2.1
+git tag v0.2.0
 git push --tags
 ```
 
-GitHub builds proper installers on real Mac, Windows and Linux machines (a `.dmg` for Mac, an installer `.exe` for Windows, `.AppImage` and `.deb` for Linux and Raspberry Pi) and attaches them to a draft release for you to check and publish. Bump `"version"` in `package.json` first.
+GitHub builds the installers on real Mac, Windows and Linux machines (about 15 minutes; watch the **Actions** tab): a `.dmg` for Mac, a setup `.exe` for Windows, `.AppImage` and `.deb` for Linux and Raspberry Pi, plus portable zips. They're attached to a **draft** release. Open **Releases**, check the files, paste the notes from `CHANGELOG.md`, and click **Publish release**.
+
+Every push also runs `.github/workflows/check.yml` (the same as `npm run check`).
 
 ## 4. Get rid of the "unidentified developer" warnings (optional, costs money)
 
@@ -64,6 +65,6 @@ Unsigned apps work, but people see warnings and have to click through them.
 
 ## 7. Each new version
 
-1. Change `"version"` in `package.json` (e.g. `0.2.1`).
+1. Change `"version"` in `package.json` (e.g. `0.2.1`) and add a section to `CHANGELOG.md`.
 2. Commit, then `git tag v0.2.1 && git push && git push --tags`.
 3. Review the draft release on GitHub and click **Publish**.

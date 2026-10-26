@@ -24,11 +24,13 @@ Desktop app (Electron) for designing dashboard "screens" and showing them on any
 - Widgets size everything from their own box with container query units (`cqw`, `cqh`) and `ctx.cls` (`xs/s/m/l`) so they work from a 240 px round screen to 4K. Use theme variables (`--fg`, `--muted`, `--accent`, `--bg`, `--radius`, `--font`). E-ink screens (`data-color="eink6" | "mono"`) get no animation and palette-limited colors.
 - Round screens: keep content inside the inscribed square; presets map into 0.16–0.84 of the grid.
 - User-facing text is plain, friendly English; the app is also meant for Chinese-speaking users (date/calendar widgets support zh-CN/zh-TW).
+- `npm run check` (`tools/check.mjs`) syntax-checks every script and smoke-tests the server without Electron; CI runs it on every push.
+- The server rejects requests whose Host header isn't localhost, an IP, or this computer's name (DNS rebinding guard).
 - Testing so far was done headless (Electron under Xvfb, with mocked network data, screenshotting the editor and display pages). Check visual changes the same way or by running the app.
 
 ## Open items
 
-- Fill in `app/shared/project.js` (GitHub URL, PayPal.me, Venmo, Zelle), `package.json` (`YOUR-GITHUB-NAME`, `YOUR-PUBLIC-EMAIL@example.com`) and `.github/FUNDING.yml`.
+- Links are filled in: GitHub `Asmo7791/framedeck`, Venmo `asmo7791`, public email is the GitHub noreply address. The supporter-key pair was regenerated on 2026-10-26 (private key in gitignored `keys/`).
 - Create the GitHub repo and push; first release `v0.2.0`. See `PUBLISHING.md`.
 - Windows and Intel-Mac builds haven't run on real hardware yet.
 - Roadmap: Kraken LCD on Linux via liquidctl, pushing images to e-ink panels, native iOS/Android viewer apps, more widgets (stocks, smart home, esports schedules).
