@@ -1,0 +1,58 @@
+# Builds FrameDeck on real Mac, Windows and Linux machines whenever you push a
+# version tag (for example: git tag v0.2.0 && git push --tags), then attaches
+# the installers to a draft GitHub Release for you to review and publish.
+name: Release
+
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: macos-latest      # Apple silicon + Intel Macs (DMG and ZIP)
+            args: --mac
+          - os: windows-latest    # Windows x64 + ARM installers
+            args: --win
+          - os: ubuntu-latest     # Linux and Raspberry Pi 64-bit (AppImage, deb, tar.gz)
+            args: --linux
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Build and upload
+        run: npx electron-builder ${{ matrix.args }} --publish always
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # Mac signing + notarization (optional until you join the Apple Developer Program).
+          # Without these the Mac build is unsigned and users see the Gatekeeper warning.
+          CSC_LINK: ${{ secrets.MAC_CERT_P12_BASE64 }}
+          CSC_KEY_PASSWORD: ${{ secrets.MAC_CERT_PASSWORD }}
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_APP_SPECIFIC_PASSWORD: ${{ secrets.APPLE_APP_SPECIFIC_PASSWORD }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+          CSC_IDENTITY_AUTO_DISCOVERY: ${{ secrets.MAC_CERT_P12_BASE64 != '' }}
+
+  raspberry-pi-32bit:
+    # Electron 44+ no longer ships 32-bit ARM, so this build pins Electron 43.
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npm ci
+      - run: npx electron-builder --linux tar.gz deb --armv7l -c.electronVersion=43.8.3 --publish always
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}

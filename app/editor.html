@@ -1,0 +1,163 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>FrameDeck</title>
+<link rel="stylesheet" href="shared/stage.css">
+<link rel="stylesheet" href="editor.css">
+</head>
+<body>
+<header class="topbar">
+  <div class="brand"><span class="logo" aria-hidden="true"></span>FrameDeck</div>
+  <div class="top-mid">
+    <button class="icon-btn" id="undo" title="Undo (⌘Z)" aria-label="Undo">↶</button>
+    <button class="icon-btn" id="redo" title="Redo (⇧⌘Z)" aria-label="Redo">↷</button>
+    <span class="save-state" id="saveState">Saved</span>
+  </div>
+  <div class="top-right">
+    <button class="btn ghost donate-btn" id="donateBtn">♥ Support</button>
+    <button class="btn ghost" id="guidesBtn">Guides</button>
+    <button class="btn ghost" id="settingsBtn">Settings</button>
+    <button class="btn primary" id="showBtn">Show on a display ▾</button>
+  </div>
+</header>
+
+<div class="layout">
+  <aside class="left">
+    <section>
+      <div class="sec-head"><h2>Screens</h2><button class="mini" id="addScreen">+ Add</button></div>
+      <ul class="list" id="screenList"></ul>
+    </section>
+    <section>
+      <div class="sec-head"><h2>Pages</h2><button class="mini" id="addPage">+ Add</button></div>
+      <ul class="list" id="pageList"></ul>
+    </section>
+    <section class="grow">
+      <div class="sec-head"><h2>Widgets</h2><span class="hint">click or drag · ✎ edits code</span></div>
+      <div class="palette" id="palette"></div>
+    </section>
+  </aside>
+
+  <main class="center">
+    <div class="canvas-bar">
+      <div class="canvas-title" id="canvasTitle"></div>
+      <div class="canvas-tools">
+        <label class="check"><input type="checkbox" id="gridToggle" checked> Grid</label>
+        <label class="check"><input type="checkbox" id="liveToggle" checked> Live data</label>
+      </div>
+    </div>
+    <div class="viewport" id="viewport">
+      <div class="frame" id="frame">
+        <div class="scaler" id="scaler"></div>
+        <div class="overlay" id="overlay"></div>
+      </div>
+      <div class="new-display" id="newDisplay" hidden></div>
+      <div class="empty-note" id="emptyNote" hidden>This page is empty. Click a widget on the left to add it.</div>
+    </div>
+  </main>
+
+  <aside class="right" id="inspector"></aside>
+</div>
+
+<dialog id="screenDialog">
+  <form method="dialog" class="dlg">
+    <h3>Add a screen</h3>
+    <p class="muted">Pick what you'll show it on. You can change the size later and the layout stretches to fit.</p>
+    <div class="profile-list" id="profileList"></div>
+    <div class="row-fields" id="customFields" hidden>
+      <label>Width <input type="number" id="cw" min="64" max="8000" value="1024"></label>
+      <label>Height <input type="number" id="ch" min="64" max="8000" value="600"></label>
+      <label>Shape <select id="cshape"><option value="rect">Rectangle</option><option value="round">Round</option></select></label>
+      <label>Colors <select id="ccolor"><option value="full">Full color</option><option value="eink6">E-ink 6-color</option><option value="mono">Black & white</option></select></label>
+    </div>
+    <label class="block">Name <input type="text" id="sname" placeholder="My screen"></label>
+    <div class="dlg-actions"><button value="cancel" class="btn ghost">Cancel</button><button id="screenCreate" value="ok" class="btn primary">Add screen</button></div>
+  </form>
+</dialog>
+
+<dialog id="pageDialog">
+  <div class="dlg wide">
+    <div class="dlg-top"><h3>Add a page</h3>
+      <div class="seg" id="pdSeg"><button type="button" data-mode="preset" class="on">Preset</button><button type="button" data-mode="custom">Custom</button></div>
+    </div>
+    <div id="pdPreset">
+      <p class="muted">Presets are laid out for this screen's size. Pick one, then change anything you like.</p>
+      <div class="preset-grid" id="presetGrid"></div>
+      <div class="btn-row"><button type="button" class="btn small" id="importPreset">Import a preset…</button><input type="file" id="presetFile" accept=".json,application/json" hidden></div>
+    </div>
+    <div id="pdCustom" hidden>
+      <label class="block">Page name <input type="text" id="pdName" placeholder="New page"></label>
+      <div class="choice-list">
+        <label class="choice"><input type="radio" name="pdStart" value="blank" checked><span><b>Blank page</b><small>Start empty and add widgets from the left.</small></span></label>
+        <label class="choice"><input type="radio" name="pdStart" value="copy"><span><b>Copy of the current page</b><small id="pdCopyName"></small></span></label>
+      </div>
+    </div>
+    <div class="dlg-actions"><button type="button" class="btn ghost" id="pdCancel">Cancel</button><button type="button" class="btn primary" id="pdAdd">Add page</button></div>
+  </div>
+</dialog>
+
+<dialog id="askDialog">
+  <form method="dialog" class="dlg narrow">
+    <h3 id="askTitle"></h3>
+    <p class="muted" id="askNote"></p>
+    <input type="text" id="askInput">
+    <div class="dlg-actions"><button value="cancel" class="btn ghost">Cancel</button><button value="ok" class="btn primary" id="askOk">OK</button></div>
+  </form>
+</dialog>
+
+<dialog id="studio" class="studio">
+  <div class="st-top">
+    <div class="st-title"><span id="stIcon">🧩</span><b id="stName">Widget</b><span class="chip" id="stKind"></span><span class="save-state" id="stState"></span></div>
+    <div class="st-actions">
+      <select id="stTemplate" title="Start from a template"></select>
+      <button class="btn small" id="stRun" title="Run (⌘↩)">▶ Run</button>
+      <button class="btn small ghost" id="stExport">Export</button>
+      <button class="btn small ghost danger" id="stReset">Reset to original</button>
+      <button class="btn small ghost danger" id="stDelete">Delete</button>
+      <button class="btn small" id="stSaveAs">Save as…</button>
+      <button class="btn small primary" id="stSave" title="Save (⌘S)">Save</button>
+      <button class="icon-btn" id="stClose" title="Close" aria-label="Close">✕</button>
+    </div>
+  </div>
+  <div class="st-body">
+    <div class="st-code">
+      <div class="tabs" id="stTabs"><button data-tab="js" class="on">JavaScript</button><button data-tab="css">CSS</button><button data-tab="help">Reference</button></div>
+      <div class="code-wrap" id="stCodeWrap"><pre class="gutter" id="stGutter"></pre><textarea id="stCode" spellcheck="false" autocomplete="off" autocapitalize="off"></textarea></div>
+      <div class="help" id="stHelp" hidden></div>
+    </div>
+    <div class="st-side">
+      <div class="st-prev-head"><h2>Preview</h2><span class="muted" id="stPrevNote"></span></div>
+      <div class="st-previews" id="stPreviews"></div>
+      <div class="st-console"><div class="st-con-head"><h2>Console</h2><button class="mini" id="stClear">Clear</button></div><div id="stLog"></div></div>
+    </div>
+  </div>
+</dialog>
+
+<dialog id="guides" class="guides">
+  <div class="g-wrap">
+    <nav class="g-nav" id="guideNav"></nav>
+    <article class="g-body" id="guideBody"></article>
+    <button class="icon-btn g-close" id="guideClose" aria-label="Close">✕</button>
+  </div>
+</dialog>
+
+<dialog id="donate" class="donate">
+  <div class="dlg narrow" id="donateBody"></div>
+</dialog>
+
+<div class="popover" id="showPop" hidden></div>
+<div class="popover" id="settingsPop" hidden></div>
+<div class="toast" id="toast"></div>
+
+<script src="shared/project.js"></script>
+<script src="shared/profiles.js"></script>
+<script src="shared/widget-css.js"></script>
+<script src="shared/widgets.js"></script>
+<script src="shared/widgets-extra.js"></script>
+<script src="shared/userwidgets.js"></script>
+<script src="shared/presets.js"></script>
+<script src="shared/render.js"></script>
+<script src="editor.js"></script>
+</body>
+</html>

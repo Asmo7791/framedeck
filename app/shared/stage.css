@@ -1,0 +1,59 @@
+/* Rendering of screens and widgets. Everything sizes from the widget's own box
+   (container query units), so layouts adapt to any screen. */
+
+.fd-stage {
+  position: relative;
+  overflow: hidden;
+  font-family: var(--font);
+  background: var(--bg);
+  color: var(--fg);
+  -webkit-font-smoothing: antialiased;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.15;
+  user-select: none;
+}
+.fd-stage[data-shape="round"] { border-radius: 50%; }
+.fd-stage[data-color="eink6"], .fd-stage[data-color="mono"] { -webkit-font-smoothing: none; }
+.fd-stage[data-color="eink6"] *, .fd-stage[data-color="mono"] * { transition: none !important; animation: none !important; }
+
+.fd-w { position: absolute; box-sizing: border-box; }
+.fd-card {
+  position: absolute;
+  inset: calc(var(--gap) / 2);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+.fd-stage[data-card="filled"] .fd-card, .fd-w[data-card="filled"] .fd-card { background: var(--card-bg); }
+.fd-stage[data-card="outline"] .fd-card, .fd-w[data-card="outline"] .fd-card { border: max(1px, calc(var(--gap) / 4)) solid var(--fg); }
+.fd-w[data-card="none"] .fd-card { background: none; border: 0; }
+.fd-body {
+  position: absolute;
+  inset: 0;
+  box-sizing: border-box;
+  container-type: size;
+  display: flex;
+  overflow: hidden;
+}
+.fd-body > * { flex: 1; min-width: 0; min-height: 0; }
+
+.fd-empty { display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; gap: 0.4em; font-size: clamp(9px, min(7cqw, 14cqh), 22px); color: var(--muted); }
+.fd-empty b { color: var(--fg); font-size: 1.15em; }
+.fd-loading { display: flex; align-items: center; justify-content: center; }
+.fd-loading::after { content: ''; width: min(18cqmin, 40px); aspect-ratio: 1; border-radius: 50%; border: 3px solid var(--muted); border-top-color: var(--accent); animation: fd-spin 0.9s linear infinite; }
+@keyframes fd-spin { to { transform: rotate(360deg); } }
+
+.fill-accent { fill: var(--accent); } .fill-fg { fill: var(--fg); }
+.stroke-accent { stroke: var(--accent); stroke-width: 4; stroke-linecap: round; }
+.stroke-fg { stroke: var(--fg); stroke-width: 4.5; stroke-linecap: round; }
+
+/* rings */
+.fd-ring { width: 100%; height: 100%; display: block; }
+.fd-ring-track { fill: none; stroke: color-mix(in srgb, var(--muted) 30%, transparent); stroke-width: 9; }
+.fd-stage[data-color="eink6"] .fd-ring-track, .fd-stage[data-color="mono"] .fd-ring-track { stroke: var(--fg); stroke-width: 1.5; }
+.fd-ring-val { fill: none; stroke-width: 9; stroke-linecap: round; }
+.fd-ring-label { fill: var(--fg); font-size: 19px; font-weight: 700; text-anchor: middle; font-family: var(--font); }
+.fd-ring-sub { fill: var(--muted); font-size: 9px; text-anchor: middle; font-family: var(--font); letter-spacing: 0.02em; }
+
+/* custom widget frames */
+.fd-frame-wrap { position: relative; }
+.fd-frame-wrap iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; background: transparent; color-scheme: normal; }

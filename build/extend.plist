@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>NSAppleEventsUsageDescription</key>
+  <string>FrameDeck reads what Spotify or Music is playing for the Now playing widget.</string>
+  <key>NSLocalNetworkUsageDescription</key>
+  <string>FrameDeck shares your screens with tablets, phones and other computers on your network when you turn on network sharing.</string>
+</dict>
+</plist>

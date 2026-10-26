@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="FrameDeck">
+<meta name="theme-color" content="#000000">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="icon" href="icon-192.png">
+<title>FrameDeck display</title>
+<link rel="stylesheet" href="shared/stage.css">
+<style>
+  html, body { margin: 0; height: 100%; background: #000; overflow: hidden; }
+  body.idle { cursor: none; }
+  #wrap { position: fixed; inset: 0; display: flex; align-items: center; justify-content: center; }
+  #host { position: relative; transform-origin: center center; transition: opacity .45s ease; flex: none; }
+  #host.fading { opacity: 0; }
+  #picker { color: #e7e9ee; font: 16px -apple-system, "Segoe UI", sans-serif; max-width: 520px; margin: 12vh auto; padding: 0 20px; }
+  #picker h1 { font-size: 22px; } #picker a { display: block; padding: 14px 16px; margin: 8px 0; border-radius: 12px; background: #1a1e26; color: inherit; text-decoration: none; }
+  #picker small { color: #8b94a3; display: block; margin-top: 2px; }
+  #hint { position: fixed; bottom: 14px; left: 50%; transform: translateX(-50%); font: 13px -apple-system, sans-serif; color: #c9ced8; background: rgba(20,22,28,.85);
+    padding: 8px 14px; border-radius: 999px; opacity: 0; transition: opacity .3s; pointer-events: none; white-space: nowrap; }
+  body:not(.idle) #hint.show { opacity: 1; }
+</style>
+</head>
+<body>
+<div id="wrap"><div id="host"></div></div>
+<div id="hint"></div>
+<script src="shared/profiles.js"></script>
+<script src="shared/widget-css.js"></script>
+<script src="shared/widgets.js"></script>
+<script src="shared/widgets-extra.js"></script>
+<script src="shared/userwidgets.js"></script>
+<script src="shared/render.js"></script>
+<script src="display.js"></script>
+</body>
+</html>
