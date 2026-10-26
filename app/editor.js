@@ -1580,6 +1580,7 @@
       ${methods ? `<div class="pays">${methods}</div><p class="muted">${esc(P.keyNote || '')}</p>` : '<p class="muted">Donation links haven\'t been set up yet.</p>'}
       <p class="perks">Supporters get a key that unlocks: <b>${esc(themes)}</b> themes, and a supporter badge.</p>
       <label class="block">Have a supporter key?<input type="text" id="supKey" placeholder="FD1-…" spellcheck="false" autocomplete="off"></label>
+      <p class="note">A key works on up to 3 computers. Unlocking needs an internet connection once.</p>
       <p class="note warn" id="supErr" hidden></p>
       <div class="dlg-actions"><button class="btn ghost" data-don="close">Not now</button><button class="btn primary" data-don="apply">Unlock</button></div>`;
   }

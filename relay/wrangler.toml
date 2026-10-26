@@ -1,7 +1,16 @@
-# Cloudflare Worker settings for the FrameDeck esports relay. Deploy with:
+# Cloudflare Worker settings for the FrameDeck relay. Deploy with:
 #   npx wrangler deploy
 # and set the token once with:
 #   npx wrangler secret put PANDASCORE_TOKEN
 name = "framedeck-relay"
 main = "worker.js"
 compatibility_date = "2026-10-01"
+
+# Supporter key activations: one Durable Object per key (SQLite storage, free plan).
+[[durable_objects.bindings]]
+name = "ACTIVATIONS"
+class_name = "Activations"
+
+[[migrations]]
+tag = "v1"
+new_sqlite_classes = ["Activations"]

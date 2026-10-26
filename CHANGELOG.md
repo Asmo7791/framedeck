@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.3.2
+
+- Supporter keys work on up to 3 computers. Unlocking checks in with FrameDeck's server once; after that the key works offline. **Remove key from this computer** frees its place. Keys unlocked before this version keep working.
+
 ## 0.3.1
 
 - **Easier downloads**: one Mac app for Apple silicon and Intel, one Windows installer that picks x64 or ARM by itself, and a one-line install command for Linux and Raspberry Pi that detects the machine.

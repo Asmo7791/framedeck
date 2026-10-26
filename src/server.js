@@ -276,7 +276,7 @@ function createServer({ dataDir, staticDir, hooks = {}, port = 47820 }) {
     'POST /api/supporter': async (req) => {
       const body = await readJSON(req);
       if (body.remove) return license.clear();
-      const r = license.set(String(body.key || ''));
+      const r = await license.set(String(body.key || ''));
       if (!r) throw httpError(400, "That key isn't valid. Check you copied all of it.");
       broadcast('supporter', r);
       return r;

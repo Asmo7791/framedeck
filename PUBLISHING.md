@@ -59,6 +59,13 @@ Unsigned apps work, but people see warnings and have to click through them.
   node tools/make-supporter-key.mjs "Their Name"
   ```
   and send them the `FD1-…` text it prints. They paste it into **♥ Support → Have a supporter key?**
+- Each key works on up to 3 computers (`ACTIVATION_LIMIT` in `relay/worker.js`). The relay counts them when people click **Unlock**. If a supporter replaces a computer and runs out, check or reset their key:
+
+  ```
+  node tools/supporter-key-admin.mjs status "FD1-…"
+  node tools/supporter-key-admin.mjs reset "FD1-…"
+  ```
+  This needs the admin token in `keys/relay-admin-token.txt`, set as the `ADMIN_TOKEN` secret on the Cloudflare worker. Back up that file with the private key.
 - What's unlocked lives in two places: themes marked `supporter: true` in `app/shared/profiles.js`, and the `isSupporter()` checks in `app/editor.js`. Add or remove perks there.
 - Because the code is open source, someone could remove the check. Supporter perks work best as thank-you extras, not as locks on core features.
 - **About Venmo, Zelle and PayPal:** personal accounts are meant for payments between people you know. If you're effectively selling unlocks, or donations grow, consider a PayPal or Venmo business profile, and keep records for taxes.

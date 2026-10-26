@@ -2,6 +2,8 @@
 
 It also serves **`/download`**: one link that sends Mac visitors to `FrameDeck-mac.dmg`, Windows visitors to `FrameDeck-windows-setup.exe`, and shows Linux, Raspberry Pi and phone visitors what to do instead. Add `?os=mac`, `?os=windows` or `?os=linux` to choose.
 
+It also counts **supporter key activations**: `/activate` and `/release` let each key be unlocked on up to 3 computers (`ACTIVATION_LIMIT`). The count lives in a Durable Object per key (`wrangler.toml` sets it up; free plan). For `tools/supporter-key-admin.mjs`, add a secret named `ADMIN_TOKEN` with the value from `keys/relay-admin-token.txt`.
+
 ## Esports relay
 
 A tiny [Cloudflare Worker](https://workers.cloudflare.com) that lets every FrameDeck user see esports scores (League of Legends, CS2, Valorant, Overwatch, Rainbow Six, Rocket League) without their own PandaScore token.

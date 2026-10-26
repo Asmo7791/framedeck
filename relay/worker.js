@@ -1,5 +1,5 @@
-// FrameDeck relay (a Cloudflare Worker): the esports relay, plus /download, one link that
-// sends each visitor the right FrameDeck download for their system.
+// FrameDeck relay (a Cloudflare Worker): the esports relay, supporter key activations, and
+// /download, one link that sends each visitor the right FrameDeck download for their system.
 //
 // Esports relay:
 // Answers esports match requests for every FrameDeck user with one PandaScore token and
@@ -23,6 +23,67 @@ function answer(body, ttl, source) {
   return new Response(body, {
     headers: { 'content-type': 'application/json; charset=utf-8', 'cache-control': `public, max-age=${ttl}`, 'x-relay-cache': source },
   });
+}
+
+// ---------- supporter key activations ----------
+// Each supporter key may be unlocked on ACTIVATION_LIMIT computers. The app sends the key and a
+// random ID it made for that computer; one Durable Object per key keeps the list of IDs.
+// The key's signature is checked first, so only real keys are ever stored.
+const ACTIVATION_LIMIT = 3;
+const SUPPORTER_PUBLIC_KEY = 'MCowBQYDK2VwAyEAZe8d7frOPBw9SbZ1KkhzvuS51zNDSKVl/35OxI3qgEI='; // same as src/license.js
+
+const fromB64 = (s) => {
+  const b = s.replace(/-/g, '+').replace(/_/g, '/');
+  return Uint8Array.from(atob(b + '='.repeat((4 - (b.length % 4)) % 4)), (c) => c.charCodeAt(0));
+};
+async function realKey(key, publicKey) {
+  const m = /^FD1-([A-Za-z0-9_-]+)\.([A-Za-z0-9_-]+)$/.exec(String(key || '').replace(/\s+/g, ''));
+  if (!m) return null;
+  try {
+    const pub = await crypto.subtle.importKey('spki', fromB64(publicKey), { name: 'Ed25519' }, false, ['verify']);
+    return (await crypto.subtle.verify({ name: 'Ed25519' }, pub, fromB64(m[2]), fromB64(m[1]))) ? `FD1-${m[1]}.${m[2]}` : null;
+  } catch { return null; }
+}
+
+export class Activations {
+  constructor(state) { this.storage = state.storage; }
+  async fetch(request) {
+    const { action, device, limit } = await request.json();
+    const devices = (await this.storage.get('devices')) || [];
+    const reply = (ok, list, status = 200) => json({ ok, used: list.length, limit }, status);
+    if (action === 'activate') {
+      if (devices.includes(device)) return reply(true, devices);
+      if (devices.length >= limit) return reply(false, devices, 403);
+      const next = [...devices, device];
+      await this.storage.put('devices', next);
+      return reply(true, next);
+    }
+    if (action === 'release') {
+      const next = devices.filter((d) => d !== device);
+      await this.storage.put('devices', next);
+      return reply(true, next);
+    }
+    if (action === 'reset') { await this.storage.delete('devices'); return reply(true, []); }
+    if (action === 'status') return reply(true, devices);
+    return json({ error: 'Unknown action' }, 400);
+  }
+}
+
+async function activations(request, env, path) {
+  if (request.method !== 'POST') return json({ error: 'Not found' }, 404);
+  if (!env.ACTIVATIONS) return json({ error: 'Key activation isn\'t set up on this relay' }, 503);
+  const admin = path.startsWith('/admin/');
+  if (admin && (!env.ADMIN_TOKEN || request.headers.get('authorization') !== 'Bearer ' + env.ADMIN_TOKEN)) return json({ error: 'Not allowed' }, 403);
+  let body;
+  try { body = await request.json(); } catch { return json({ error: 'Bad request' }, 400); }
+  const key = await realKey(body.key, env.SUPPORTER_PUBLIC_KEY || SUPPORTER_PUBLIC_KEY);
+  if (!key) return json({ error: 'Not a valid supporter key' }, 400);
+  const device = String(body.device || '');
+  if (!admin && !/^[a-f0-9-]{16,64}$/.test(device)) return json({ error: 'Bad device ID' }, 400);
+  const action = { '/activate': 'activate', '/release': 'release', '/admin/reset': 'reset', '/admin/status': 'status' }[path];
+  const limit = Number(env.ACTIVATION_LIMIT) || ACTIVATION_LIMIT;
+  const stub = env.ACTIVATIONS.get(env.ACTIVATIONS.idFromName(key));
+  return stub.fetch('https://activations/', { method: 'POST', body: JSON.stringify({ action, device, limit }) });
 }
 
 // ---------- /download ----------
@@ -76,6 +137,7 @@ export default {
     const url = new URL(request.url);
     if (url.pathname === '/') return json({ ok: true, service: 'FrameDeck esports relay' });
     if (url.pathname === '/download' || url.pathname === '/download/') return download(request);
+    if (['/activate', '/release', '/admin/reset', '/admin/status'].includes(url.pathname)) return activations(request, env, url.pathname);
     const m = /^\/pandascore\/([a-z0-9]+)\/matches\/(running|upcoming|past)$/.exec(url.pathname);
     if (request.method !== 'GET' || !m || !GAMES.has(m[1])) return json({ error: 'Not found' }, 404);
     if (!env.PANDASCORE_TOKEN) return json({ error: 'The relay has no PandaScore token yet' }, 503);

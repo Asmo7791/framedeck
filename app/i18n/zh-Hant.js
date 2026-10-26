@@ -290,6 +290,10 @@
     'Remove the supporter key from this computer? You can add it again any time.': '從這臺電腦移除支持者金鑰？之後隨時可以重新新增。',
     'Thank you! Supporter features unlocked.': '謝謝你！支持者功能已解鎖。',
     "That key isn't valid. Check you copied all of it.": '這個金鑰無效。請檢查是否完整複製。',
+    'A key works on up to 3 computers. Unlocking needs an internet connection once.': '一個金鑰最多可在 3 臺電腦上使用。解鎖時需要聯網一次。',
+    "Couldn't reach FrameDeck's activation server. Check your internet connection and try again.": '無法連線 FrameDeck 啟用伺服器。請檢查網路連線後重試。',
+    'This key is already unlocked on {0} computers. Remove it from one of them (♥ Supporter → Remove key from this computer), or ask the developer to reset it.': '這個金鑰已經在 {0} 臺電腦上解鎖了。請先在其中一臺上移除（♥ 支持者 → 從這臺電腦移除金鑰），或請開發者重置。',
+    'The activation server answered: {0}': '啟用伺服器返回：{0}',
 
     // ---------- Widget Studio ----------
     'Widget': '小元件', 'My widget': '我的小元件', 'New widget': '新小元件', 'Your widget': '你的小元件', 'Built-in': '內建', 'Built-in · edited': '內建 · 已修改',

@@ -103,7 +103,26 @@ try {
   ok(!sources.isPrivateIp('93.184.216.34') && !sources.isPrivateIp('2606:4700::1111'), 'allows public addresses');
 
   // Esports relay: run relay/worker.js locally against a fake PandaScore, and point FrameDeck at it.
-  const { default: relay } = await import(path.join(root, 'relay/worker.js'));
+  const { default: relay, Activations } = await import(path.join(root, 'relay/worker.js'));
+  // A test signing key, and an in-memory stand-in for the relay's Durable Objects.
+  const cryptoMod = await import('crypto');
+  const testKeys = cryptoMod.generateKeyPairSync('ed25519');
+  const testPem = testKeys.publicKey.export({ type: 'spki', format: 'pem' });
+  const testSpki = testKeys.publicKey.export({ type: 'spki', format: 'der' }).toString('base64');
+  const signKey = (name) => {
+    const payload = Buffer.from(JSON.stringify({ n: name, t: 'supporter', d: '2026-10-26' }));
+    const u = (b) => b.toString('base64').replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+    return `FD1-${u(payload)}.${u(cryptoMod.sign(null, payload, testKeys.privateKey))}`;
+  };
+  const objects = new Map();
+  const ACTIVATIONS = {
+    idFromName: (name) => name,
+    get: (id) => {
+      if (!objects.has(id)) { const store = new Map(); objects.set(id, new Activations({ storage: { get: async (k) => store.get(k), put: async (k, v) => { store.set(k, v); }, delete: async (k) => { store.delete(k); } } })); }
+      return { fetch: (u, init) => objects.get(id).fetch(new Request(u, init)) };
+    },
+  };
+  const relayEnv = { PANDASCORE_TOKEN: 'relay-secret', ACTIVATIONS, ADMIN_TOKEN: 'admin-secret', SUPPORTER_PUBLIC_KEY: testSpki };
   const realFetch = globalThis.fetch;
   const upstream = [];
   const match = { id: 1, status: 'finished', number_of_games: 3, winner_id: 10, league: { name: 'LCK' }, begin_at: '2026-10-26T10:00:00Z',
@@ -116,7 +135,9 @@ try {
     return realFetch(u, opts);
   };
   const relayServer = http.createServer(async (req, r) => {
-    const out = await relay.fetch(new Request('http://relay' + req.url), { PANDASCORE_TOKEN: 'relay-secret' }, { waitUntil() {} });
+    const chunks = []; for await (const c of req) chunks.push(c);
+    const init = { method: req.method, headers: req.headers, body: req.method === 'POST' ? Buffer.concat(chunks) : undefined };
+    const out = await relay.fetch(new Request('http://relay' + req.url, init), relayEnv, { waitUntil() {} });
     r.writeHead(out.status, { 'content-type': 'application/json' }); r.end(await out.text());
   });
   await new Promise((resolve) => relayServer.listen(0, '127.0.0.1', resolve));
@@ -141,6 +162,28 @@ try {
     ok(linux.status === 200 && (await linux.text()).includes('install.sh | sh'), '/download shows Linux the install command');
     ok((await (await dl('Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X)')).text()).includes('Add to Home Screen'), '/download tells phones no download is needed');
     ok(loc(await dl('Mozilla/5.0 (X11; Linux x86_64)', '?os=windows')).endsWith('FrameDeck-windows-setup.exe'), '/download?os= picks a system');
+
+    // Supporter keys: four computers try one key; the limit is three.
+    const { licenseStore } = require(path.join(root, 'src/license.js'));
+    const relayBase = process.env.FRAMEDECK_ESPORTS_RELAY;
+    const computers = [1, 2, 3, 4].map(() => licenseStore(fs.mkdtempSync(path.join(os.tmpdir(), 'framedeck-pc-')), { publicKey: testPem, relay: () => relayBase }));
+    const key = signKey('Tester');
+    const tryUnlock = (pc) => pc.set(key).then((r) => (r.supporter ? 'ok' : 'no'), (e) => e.status);
+    const first3 = [await tryUnlock(computers[0]), await tryUnlock(computers[1]), await tryUnlock(computers[2])];
+    ok(first3.every((r) => r === 'ok'), 'a key unlocks on three computers');
+    ok(await tryUnlock(computers[3]) === 403, 'a fourth computer is refused');
+    ok(await tryUnlock(computers[0]) === 'ok', 'unlocking again on the same computer still works');
+    await computers[0].clear();
+    ok(await tryUnlock(computers[3]) === 'ok', 'removing the key from one computer frees its place');
+    const adminCall = (route, token) => fetch(relayBase + route, { method: 'POST', headers: token ? { authorization: 'Bearer ' + token } : {}, body: JSON.stringify({ key }) });
+    ok((await adminCall('/admin/reset')).status === 403, 'resetting a key needs the admin token');
+    ok((await (await adminCall('/admin/status', 'admin-secret')).json()).used === 3, 'the admin status shows how many computers use a key');
+    await adminCall('/admin/reset', 'admin-secret');
+    ok((await (await adminCall('/admin/status', 'admin-secret')).json()).used === 0, 'the admin reset frees every computer');
+    const forged = await fetch(relayBase + '/activate', { method: 'POST', body: JSON.stringify({ key: key.slice(0, -4) + 'AAAA', device: '0123456789abcdef' }) });
+    ok(forged.status === 400 && objects.size === 1, 'the relay ignores forged keys');
+    const offline = licenseStore(fs.mkdtempSync(path.join(os.tmpdir(), 'framedeck-pc-')), { publicKey: testPem, relay: () => 'http://127.0.0.1:1' });
+    ok(await offline.set(key).catch((e) => e.status) === 502, 'without internet, unlocking explains what went wrong');
   } finally {
     delete process.env.FRAMEDECK_ESPORTS_RELAY;
     globalThis.fetch = realFetch;

@@ -6,6 +6,7 @@ const http = require('http');
 const https = require('https');
 const zlib = require('zlib');
 const { execFile } = require('child_process');
+const { relayUrl } = require('./relay');
 
 const UA = { 'user-agent': 'FrameDeck/0.2 (+https://github.com/Asmo7791/framedeck)' };
 
@@ -200,8 +201,7 @@ const PANDASCORE = { lol: ['lol', 'League of Legends'], cs2: ['csgo', 'Counter-S
 const short = (name) => String(name || '').trim();
 // FrameDeck's shared esports relay (relay/worker.js), used when a widget has no token of its own.
 // Set FRAMEDECK_ESPORTS_RELAY to use a different one, or to "off" to require a token.
-const DEFAULT_ESPORTS_RELAY = 'https://framedeck-relay.kagura8790.workers.dev';
-const esportsRelay = () => (process.env.FRAMEDECK_ESPORTS_RELAY === 'off' ? '' : (process.env.FRAMEDECK_ESPORTS_RELAY || DEFAULT_ESPORTS_RELAY));
+const esportsRelay = () => (process.env.FRAMEDECK_ESPORTS_RELAY === 'off' ? '' : (process.env.FRAMEDECK_ESPORTS_RELAY || relayUrl()));
 
 async function dota() {
   const get = async (p) => { const r = await fetch('https://api.opendota.com/api/' + p, { headers: UA, signal: AbortSignal.timeout(12000) }); if (!r.ok) throw new Error(`HTTP ${r.status} from OpenDota`); return r.json(); };
