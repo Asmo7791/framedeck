@@ -50,6 +50,39 @@ try {
     http.get({ host: '127.0.0.1', port, path: '/api/config', headers: { host: `evil.example:${port}` } }, (r) => { r.resume(); resolve(r.statusCode); }).on('error', reject);
   });
   ok(status === 421, 'rejects requests for other host names (DNS rebinding)');
+
+  // A tiny feed server standing in for a private calendar / RSS link.
+  const zlib = await import('zlib');
+  const ICS = 'BEGIN:VCALENDAR\r\nBEGIN:VEVENT\r\nSUMMARY:Secret meeting\r\nDTSTART:' + new Date(Date.now() + 3600e3).toISOString().replace(/[-:]|\.\d+/g, '') + '\r\nEND:VEVENT\r\nEND:VCALENDAR\r\n';
+  const feed = http.createServer((req, r) => { r.writeHead(200, { 'content-type': 'text/calendar', 'content-encoding': 'gzip' }); r.end(zlib.gzipSync(ICS)); });
+  await new Promise((resolve) => feed.listen(0, '127.0.0.1', resolve));
+  const feedUrl = `http://127.0.0.1:${feed.address().port}/secret.ics`;
+  try {
+    const withAgenda = structuredClone(cfg.config);
+    withAgenda.screens[0].pages[0].widgets.push({ id: 'cal1', type: 'agenda', x: 0, y: 0, w: 2, h: 2, settings: { url: feedUrl } });
+    withAgenda.screens[0].pages[0].widgets.push({ id: 'sc1', type: 'scores', x: 0, y: 0, w: 2, h: 2, settings: { league: 'lol', token: 'pandascore-secret-token' } });
+    await fetch(base + '/api/config', { method: 'PUT', headers: { 'x-framedeck': '1' }, body: JSON.stringify({ config: withAgenda }) });
+    const asWidget = await (await get('/api/config', { 'x-framedeck-sandbox': '1' })).text();
+    ok(!asWidget.includes('secret.ics') && asWidget.includes('fd-ref:cal1'), 'other devices get a reference instead of the calendar link');
+    ok(!asWidget.includes('pandascore-secret-token') && asWidget.includes('fd-ref:sc1'), 'other devices get a reference instead of the esports token');
+    ok((await get('/api/config')).ok && (await (await get('/api/config')).text()).includes('secret.ics'), 'the editor still sees the real link');
+    const events = await (await get('/api/ics?url=fd-ref:cal1')).json();
+    ok(JSON.stringify(events).includes('Secret meeting'), 'a reference loads the real (gzipped) calendar');
+    ok((await get('/api/ics?url=fd-ref:nope')).status === 404, 'an unknown reference fails');
+    ok((await get('/api/fetch?url=' + encodeURIComponent(feedUrl), { 'x-framedeck-sandbox': '1' })).status === 403, 'custom widgets can\'t reach local addresses');
+    ok((await get('/api/fetch?url=' + encodeURIComponent(feedUrl))).status === 200, 'built-in widgets on this computer can');
+    ok((await get('/api/system', { 'sec-fetch-site': 'cross-site' })).status === 403, 'rejects API calls from other sites');
+    ok((await get('/api/system', { origin: 'null' })).status === 403, 'rejects API calls from sandboxed frames');
+  } finally {
+    feed.close();
+  }
+
+  // Private addresses are refused when connecting, including names that resolve to them.
+  const sources = require(path.join(root, 'src/sources.js'));
+  const refused = async (u) => { try { await sources.safeFetch(u); return false; } catch (e) { return e.status === 403; } };
+  ok(await refused('http://localhost:1/'), 'refuses a host name that resolves to a private address');
+  ok(await refused('http://127.0.0.1:1/') && await refused('http://[::ffff:7f00:1]:1/') && await refused('http://[fd00::1]/'), 'refuses private IP addresses');
+  ok(!sources.isPrivateIp('93.184.216.34') && !sources.isPrivateIp('2606:4700::1111'), 'allows public addresses');
 } finally {
   server.close();
   fs.rmSync(dataDir, { recursive: true, force: true });

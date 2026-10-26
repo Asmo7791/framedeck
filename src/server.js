@@ -103,8 +103,38 @@ function createServer({ dataDir, staticDir, hooks = {}, port = 47820 }) {
     lastCpu = now;
   }, 2000).unref();
 
+  // Feed and calendar links can be private (Google's "secret address in iCal format"), and
+  // esports scores use the person's own API token. Other devices get a reference instead,
+  // and the server swaps the real value back in.
+  const SECRET_SETTINGS = { agenda: 'url', rss: 'url', scores: 'token' };
+  function hideFeedUrls(value) {
+    if (Array.isArray(value)) return value.map(hideFeedUrls);
+    if (!value || typeof value !== 'object') return value;
+    const out = {};
+    for (const [k, v] of Object.entries(value)) out[k] = hideFeedUrls(v);
+    const key = SECRET_SETTINGS[out.type];
+    if (key && out.settings && out.settings[key]) {
+      out.settings = { ...out.settings, [key]: out.id ? 'fd-ref:' + out.id : '' };
+    }
+    return out;
+  }
+  function feedUrl(raw, type) {
+    const m = /^fd-ref:(.+)$/.exec(raw || '');
+    if (!m) return raw;
+    const find = (value) => {
+      if (Array.isArray(value)) { for (const v of value) { const f = find(v); if (f) return f; } return null; }
+      if (!value || typeof value !== 'object') return null;
+      if (value.id === m[1] && value.type === type && value.settings) return value.settings[SECRET_SETTINGS[type]] || null;
+      for (const v of Object.values(value)) { const f = find(v); if (f) return f; }
+      return null;
+    };
+    const url = find(config.screens);
+    if (!url) throw httpError(404, 'That widget no longer exists');
+    return url;
+  }
+
   const api = {
-    'GET /api/config': () => ({ revision, config }),
+    'GET /api/config': (req, url, local) => ({ revision, config: local ? config : hideFeedUrls(config) }),
     'PUT /api/config': async (req) => {
       const body = await readJSON(req);
       if (!body || !body.config || !Array.isArray(body.config.screens)) throw httpError(400, 'Invalid config');
@@ -195,18 +225,20 @@ function createServer({ dataDir, staticDir, hooks = {}, port = 47820 }) {
       }));
     },
     'GET /api/rss': async (req, url, local) => {
-      const feed = url.searchParams.get('url') || '';
+      const feed = feedUrl(url.searchParams.get('url') || '', 'rss');
       return cached('rss:' + feed + local, 10 * 60000, async () => sources.parseFeed((await sources.safeFetch(feed, { allowPrivate: local })).text));
     },
     'GET /api/ics': async (req, url, local) => {
-      const feed = url.searchParams.get('url') || '';
+      const feed = feedUrl(url.searchParams.get('url') || '', 'agenda');
       const days = Math.max(1, Math.min(60, Number(url.searchParams.get('days')) || 14));
       const text = await cached('ics:' + feed + local, 10 * 60000, async () => (await sources.safeFetch(feed, { allowPrivate: local, maxBytes: 8 * 1024 * 1024 })).text);
       return sources.parseIcs(text, { days });
     },
     'GET /api/scores': async (req, url) => {
       const league = (url.searchParams.get('league') || 'nba').toLowerCase();
-      return cached('scores:' + league, 60000, () => sources.scores(league));
+      const token = feedUrl(url.searchParams.get('token') || '', 'scores');
+      const key = 'scores:' + league + ':' + crypto.createHash('sha256').update(token).digest('hex').slice(0, 12);
+      return cached(key, 60000, () => sources.scores(league, { token }));
     },
     'GET /api/air': async (req, url) => {
       const lat = Number(url.searchParams.get('lat')), lon = Number(url.searchParams.get('lon'));
@@ -312,7 +344,9 @@ function createServer({ dataDir, staticDir, hooks = {}, port = 47820 }) {
 
   const server = http.createServer(async (req, res) => {
     const url = new URL(req.url, 'http://local');
-    const local = LOOPBACK.has(req.socket.remoteAddress);
+    // Requests a custom widget makes through the app's bridge are treated like requests
+    // from another device, so imported widget code can only reach public addresses.
+    const local = LOOPBACK.has(req.socket.remoteAddress) && req.headers['x-framedeck-sandbox'] !== '1';
     const route = `${req.method} ${url.pathname}`;
     // Only answer to addresses FrameDeck hands out, so a web page can't point its own
     // domain at this computer (DNS rebinding) and read or change the config.
@@ -326,6 +360,13 @@ function createServer({ dataDir, staticDir, hooks = {}, port = 47820 }) {
         return;
       }
       if (api[route]) {
+        // Pages from other sites (and sandboxed widget frames, whose origin is "null") may
+        // not call the API directly. Browsers send these headers on every fetch.
+        const site = req.headers['sec-fetch-site'];
+        const origin = req.headers.origin;
+        if (site === 'cross-site' || site === 'same-site' || (origin && origin !== `http://${req.headers.host}`)) {
+          return send(res, 403, { error: 'Not allowed from another site' });
+        }
         if (LOCAL_ONLY.has(route) && !local) return send(res, 403, { error: 'Only allowed from this computer' });
         // Changes need a custom header, which browsers won't send cross-site without permission,
         // so a web page (or a custom widget frame) can't quietly call these endpoints.

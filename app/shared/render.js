@@ -4,8 +4,8 @@
   const FD = (window.FD = window.FD || {});
   const dataCache = new Map();
 
-  FD.fetchJSON = async function (url) {
-    const r = await fetch(url, { cache: 'no-store' });
+  FD.fetchJSON = async function (url, headers) {
+    const r = await fetch(url, { cache: 'no-store', headers });
     const body = await r.json().catch(() => ({}));
     if (!r.ok) throw new Error(body.error || `HTTP ${r.status}`);
     return body;

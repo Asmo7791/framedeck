@@ -19,7 +19,7 @@
       ['rss', 0, 0, 0.6, 1], ['clock', 0.6, 0, 0.4, 0.3, { style: 'digital' }], ['hn', 0.6, 0.3, 0.4, 0.7, { count: '5' }]]),
     P('markets', 'Markets', '🪙', 'Crypto prices, world clocks and business news', [
       ['crypto', 0, 0, 0.55, 1, { coins: 'bitcoin, ethereum, solana, dogecoin' }], ['worldclock', 0.55, 0, 0.45, 0.4],
-      ['rss', 0.55, 0.4, 0.45, 0.6, { url: 'https://feeds.bbci.co.uk/news/business/rss.xml', title: 'Business', count: '4' }]]),
+      ['rss', 0.55, 0.4, 0.45, 0.6, { feed: 'bbc-business', title: 'Business', count: '4' }]]),
     P('sports', 'Game day', '🏀', 'Scores from two leagues and the time', [
       ['scores', 0, 0, 0.5, 1, { league: 'nba' }], ['scores', 0.5, 0, 0.5, 0.68, { league: 'epl' }], ['clock', 0.5, 0.68, 0.5, 0.32, { style: 'digital' }]]),
     P('music', 'Now playing', '🎵', 'What Spotify or Music is playing', [

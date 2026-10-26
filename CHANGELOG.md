@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.2.1
+
+- **News feed** now has 19 ready-made feeds (world news, tech, science, sports, BBC 中文). Choose **Custom link…** to use any RSS or Atom feed.
+- **Sports scores** adds esports: Dota 2 out of the box, plus League of Legends, Counter-Strike 2, Valorant, Overwatch, Rainbow Six Siege and Rocket League with a free PandaScore token.
+- Security: calendar links, feed links and esports tokens are no longer sent to other devices on your network; the server fetches them instead.
+- Security: addresses are checked at the moment of connecting, so DNS tricks can't reach your local network through a shared display.
+- Security: custom widgets can only load public internet addresses, and web pages can no longer call FrameDeck's API directly.
+
 ## 0.2.0 (first public release)
 
 - Design dashboard screens on a grid and show them on monitors, tablets and phones (as a home-screen web app), NZXT Kraken LCDs (through NZXT CAM's Web Integration) and Raspberry Pi kiosks.

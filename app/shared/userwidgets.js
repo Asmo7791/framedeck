@@ -94,7 +94,8 @@ body { margin: 0; height: 100%; background: transparent; }
     } else if (m.kind === 'api') {
       const path = String(m.path || '');
       if (!API_ALLOW.test(path)) { post(rec, { kind: 'apiResult', reqId: m.reqId, ok: false, error: 'Not allowed: ' + path }); return; }
-      FD.fetchJSON(path).then((data) => post(rec, { kind: 'apiResult', reqId: m.reqId, ok: true, data }))
+      // Marked so the server only lets widget code reach public addresses.
+      FD.fetchJSON(path, { 'x-framedeck-sandbox': '1' }).then((data) => post(rec, { kind: 'apiResult', reqId: m.reqId, ok: true, data }))
         .catch((err) => post(rec, { kind: 'apiResult', reqId: m.reqId, ok: false, error: err.message }));
     } else if (m.kind === 'meta') {
       rec.meta = m.meta;

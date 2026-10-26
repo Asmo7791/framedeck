@@ -180,17 +180,52 @@
 `,
   };
 
+  // Ready-made feeds for the News feed widget. "custom" uses the address the user types.
+  const FEEDS = [
+    ['bbc-world', 'BBC News · World', 'https://feeds.bbci.co.uk/news/world/rss.xml'],
+    ['npr', 'NPR News', 'https://feeds.npr.org/1001/rss.xml'],
+    ['guardian-world', 'The Guardian · World', 'https://www.theguardian.com/world/rss'],
+    ['nyt', 'The New York Times', 'https://rss.nytimes.com/services/xml/rss/nyt/HomePage.xml'],
+    ['aljazeera', 'Al Jazeera', 'https://www.aljazeera.com/xml/rss/all.xml'],
+    ['cnbc', 'CNBC · Top news', 'https://www.cnbc.com/id/100003114/device/rss/rss.html'],
+    ['economist', 'The Economist · The world this week', 'https://www.economist.com/the-world-this-week/rss.xml'],
+    ['bbc-business', 'BBC News · Business', 'https://feeds.bbci.co.uk/news/business/rss.xml'],
+    ['bbc-tech', 'BBC News · Technology', 'https://feeds.bbci.co.uk/news/technology/rss.xml'],
+    ['verge', 'The Verge', 'https://www.theverge.com/rss/index.xml'],
+    ['ars', 'Ars Technica', 'https://feeds.arstechnica.com/arstechnica/index'],
+    ['techcrunch', 'TechCrunch', 'https://techcrunch.com/feed/'],
+    ['engadget', 'Engadget', 'https://www.engadget.com/rss.xml'],
+    ['wired', 'Wired', 'https://www.wired.com/feed/rss'],
+    ['nasa', 'NASA', 'https://www.nasa.gov/news-release/feed/'],
+    ['sciencedaily', 'ScienceDaily', 'https://www.sciencedaily.com/rss/top/science.xml'],
+    ['espn', 'ESPN', 'https://www.espn.com/espn/rss/news'],
+    ['bbc-zh-hans', 'BBC 中文 (简体)', 'https://feeds.bbci.co.uk/zhongwen/simp/rss.xml'],
+    ['bbc-zh-hant', 'BBC 中文 (繁體)', 'https://feeds.bbci.co.uk/zhongwen/trad/rss.xml'],
+  ];
+  // Widgets made before presets existed only have a url, so treat those as custom.
+  const feedKey = (s) => s.feed || (s.url ? 'custom' : 'bbc-world');
+  const feedAddress = (s) => {
+    const k = feedKey(s);
+    if (k === 'custom') return s.url || '';
+    return (FEEDS.find((f) => f[0] === k) || FEEDS[0])[2];
+  };
+
   W.rss = {
     name: 'News feed', icon: '🗞️', desc: 'Headlines from any RSS or Atom feed; tap one to read',
     def: [6, 5], min: [2, 2], dataEvery: 10 * 60000,
     settings: [
-      { key: 'url', label: 'Feed address', type: 'text', default: 'https://feeds.bbci.co.uk/news/world/rss.xml' },
+      { key: 'feed', label: 'Feed', type: 'select', default: '', options: FEEDS.map(([k, name]) => [k, name]).concat([['custom', 'Custom link…']]) },
+      { key: 'url', label: 'Feed address (RSS or Atom link)', type: 'text', default: '', showIf: { key: 'feed', is: 'custom' } },
       { key: 'title', label: 'Title (blank uses the feed name)', type: 'text', default: '' },
       { key: 'count', label: 'Headlines per page', type: 'select', default: '6', options: ['3', '4', '5', '6', '8', '10', '12', '15'].map((n) => [n, n]) },
       { key: 'every', label: 'Turn the page every', type: 'select', default: '30', options: [['0', 'Never'], ['15', '15 seconds'], ['30', '30 seconds'], ['60', '1 minute'], ['300', '5 minutes']] },
     ],
-    data: (s, ctx) => ctx.fetchJSON('/api/rss?url=' + encodeURIComponent(s.url || '')),
+    async data(s, ctx) {
+      const url = feedAddress(s);
+      return url ? ctx.fetchJSON('/api/rss?url=' + encodeURIComponent(url)) : null;
+    },
     render(el, s, ctx) {
+      if (!feedAddress(s)) { el.innerHTML = '<div class="fd-empty"><b>News feed</b><span>Paste a feed link (RSS or Atom) in settings.</span></div>'; return; }
       const d = ctx.data;
       if (!d) { el.innerHTML = ctx.error ? `<div class="fd-empty"><b>Feed unavailable</b><span>${esc(ctx.error)}</span></div>` : '<div class="fd-loading"></div>'; return; }
       const host = (u) => { try { return new URL(u).host.replace(/^www\./, ''); } catch { return ''; } };
@@ -269,22 +304,26 @@
   };
 
   W.scores = {
-    name: 'Sports scores', icon: '🏀', desc: 'Live and recent games (NBA, NFL, MLB, soccer…)',
+    name: 'Sports scores', icon: '🏀', desc: 'Live and recent games (NBA, NFL, MLB, soccer, esports…)',
     def: [5, 5], min: [2, 1], dataEvery: 60000,
     settings: [
       { key: 'league', label: 'League', type: 'select', default: 'nba', options: [['nba', 'NBA'], ['wnba', 'WNBA'], ['nfl', 'NFL'], ['mlb', 'MLB'], ['nhl', 'NHL'], ['ncaaf', 'College football'], ['ncaamb', 'College basketball'],
-        ['epl', 'Premier League'], ['laliga', 'La Liga'], ['seriea', 'Serie A'], ['bundesliga', 'Bundesliga'], ['ligue1', 'Ligue 1'], ['mls', 'MLS'], ['ucl', 'Champions League']] },
-      { key: 'team', label: 'Only this team (abbreviation, optional)', type: 'text', default: '' },
+        ['epl', 'Premier League'], ['laliga', 'La Liga'], ['seriea', 'Serie A'], ['bundesliga', 'Bundesliga'], ['ligue1', 'Ligue 1'], ['mls', 'MLS'], ['ucl', 'Champions League'],
+        ['dota2', 'Esports · Dota 2'], ['lol', 'Esports · League of Legends'], ['cs2', 'Esports · Counter-Strike 2'], ['valorant', 'Esports · Valorant'],
+        ['overwatch', 'Esports · Overwatch'], ['r6', 'Esports · Rainbow Six Siege'], ['rocketleague', 'Esports · Rocket League']] },
+      { key: 'token', label: 'PandaScore token (free at pandascore.co)', type: 'text', default: '', showIf: { key: 'league', in: ['lol', 'cs2', 'valorant', 'overwatch', 'r6', 'rocketleague'] } },
+      { key: 'team', label: 'Only this team (abbreviation or name, optional)', type: 'text', default: '' },
       { key: 'logos', label: 'Show team logos', type: 'toggle', default: true },
     ],
-    data: (s, ctx) => ctx.fetchJSON('/api/scores?league=' + (s.league || 'nba')),
+    data: (s, ctx) => ctx.fetchJSON('/api/scores?league=' + (s.league || 'nba') + (s.token ? '&token=' + encodeURIComponent(s.token) : '')),
     render(el, s, ctx) {
       const d = ctx.data;
       if (!d) { el.innerHTML = ctx.error ? `<div class="fd-empty"><b>Scores unavailable</b><span>${esc(ctx.error)}</span></div>` : '<div class="fd-loading"></div>'; return; }
       const team = String(s.team || '').trim().toUpperCase();
-      let games = d.games.filter((g) => !team || g.home.abbr === team || g.away.abbr === team);
+      const isTeam = (t) => t.abbr.toUpperCase() === team || (team.length > 2 && t.name.toUpperCase().includes(team));
+      let games = d.games.filter((g) => !team || isTeam(g.home) || isTeam(g.away));
       games.sort((a, b) => ({ in: 0, pre: 1, post: 2 }[a.state] - { in: 0, pre: 1, post: 2 }[b.state]) || a.date.localeCompare(b.date));
-      if (!games.length) { el.innerHTML = `<div class="fd-empty"><b>${esc(d.league)}</b><span>No games${team ? ' for ' + esc(team) : ''} today.</span></div>`; return; }
+      if (!games.length) { el.innerHTML = `<div class="fd-empty"><b>${esc(d.league)}</b><span>No games${team ? ' for ' + esc(team) : ''} ${d.esports ? 'right now' : 'today'}.</span></div>`; return; }
       const fit = Math.max(1, Math.floor((ctx.h - 20) / 46));
       games = games.slice(0, fit);
       const logo = (t) => (s.logos && t.logo && ctx.color === 'full' ? `<img src="${esc(t.logo)}" alt="">` : '');
@@ -298,7 +337,8 @@
 .w-sc { display: flex; flex-direction: column; gap: .3em; font-size: min(6.4cqw, calc(64cqh / (var(--n) + .8))); }
 .w-sc .head { color: var(--accent); font-weight: 750; font-size: .72em; letter-spacing: .1em; }
 .w-sc .g { display: grid; grid-template-columns: 1fr auto auto auto 1fr; grid-template-rows: auto auto; align-items: center; column-gap: .4em; flex: 1; }
-.w-sc .tm { display: flex; align-items: center; gap: .3em; font-weight: 700; }
+.w-sc .tm { display: flex; align-items: center; gap: .3em; font-weight: 700; min-width: 0; }
+.w-sc .tm b { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .w-sc .tm.r { justify-content: flex-start; flex-direction: row-reverse; }
 .w-sc .tm img { height: 1.2em; width: 1.2em; object-fit: contain; }
 .w-sc .sc { font-weight: 800; font-size: 1.1em; min-width: 1.3em; text-align: center; }

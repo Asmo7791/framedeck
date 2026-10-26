@@ -2,49 +2,92 @@
 // Data sources for the newer widgets, plus a safe fetch proxy for custom widgets.
 const dns = require('dns').promises;
 const net = require('net');
+const http = require('http');
+const https = require('https');
+const zlib = require('zlib');
 const { execFile } = require('child_process');
 
 const UA = { 'user-agent': 'FrameDeck/0.2 (+https://github.com/Asmo7791/framedeck)' };
 
 // ---------- safe fetching ----------
 function isPrivateIp(ip) {
-  if (ip.startsWith('::ffff:')) ip = ip.slice(7);
+  if (/^::ffff:/i.test(ip) && net.isIPv4(ip.slice(7))) ip = ip.slice(7);
   if (net.isIPv4(ip)) {
     const [a, b] = ip.split('.').map(Number);
     return a === 10 || a === 127 || a === 0 || (a === 169 && b === 254) || (a === 172 && b >= 16 && b <= 31) ||
       (a === 192 && b === 168) || (a === 100 && b >= 64 && b <= 127) || a >= 224;
   }
   const l = ip.toLowerCase();
-  return l === '::1' || l === '::' || l.startsWith('fc') || l.startsWith('fd') || l.startsWith('fe80');
+  // Loopback, unspecified, IPv4-mapped/compatible written in hex, unique-local, link-local,
+  // and the NAT64 / 6to4 ranges that can wrap a private IPv4 address.
+  return l.startsWith('::') || l.startsWith('fc') || l.startsWith('fd') || l.startsWith('fe8') ||
+    l.startsWith('fe9') || l.startsWith('fea') || l.startsWith('feb') || l.startsWith('64:ff9b:') || l.startsWith('2002:');
 }
 
-// Fetch a URL. Requests that come from other devices on the network may only
-// reach public addresses, so a shared display can't be used to probe your LAN.
-// Requests from this computer may reach local services (Home Assistant, a Pi, ...).
+const blocked = () => Object.assign(new Error('Local network addresses only work on the computer running FrameDeck'), { status: 403 });
+
+// DNS lookup that refuses private addresses. It runs as part of connecting, so the address
+// that's checked is the one used (a second lookup can't swap in a private one).
+function publicLookup(hostname, options, cb) {
+  if (typeof options === 'function') { cb = options; options = {}; }
+  dns.lookup(hostname, { ...options, all: true }).then((addrs) => {
+    if (!addrs.length) return cb(Object.assign(new Error('Address not found'), { code: 'ENOTFOUND' }));
+    if (addrs.some((a) => isPrivateIp(a.address))) return cb(blocked());
+    if (options.all) cb(null, addrs);
+    else cb(null, addrs[0].address, addrs[0].family);
+  }, cb);
+}
+
+function request(u, { allowPrivate, timeout }) {
+  return new Promise((resolve, reject) => {
+    const mod = u.protocol === 'https:' ? https : http;
+    const req = mod.get(u, {
+      headers: { ...UA, 'accept-encoding': 'gzip, deflate, br' },
+      lookup: allowPrivate ? undefined : publicLookup,
+      timeout,
+    }, resolve);
+    req.on('timeout', () => req.destroy(Object.assign(new Error('Timed out'), { status: 504 })));
+    req.on('error', reject);
+  });
+}
+
+function readBody(res, maxBytes) {
+  const enc = String(res.headers['content-encoding'] || '').toLowerCase();
+  const stream = enc === 'gzip' ? res.pipe(zlib.createGunzip()) : enc === 'deflate' ? res.pipe(zlib.createInflate())
+    : enc === 'br' ? res.pipe(zlib.createBrotliDecompress()) : res;
+  return new Promise((resolve, reject) => {
+    const chunks = []; let size = 0;
+    stream.on('data', (c) => {
+      size += c.length;
+      if (size > maxBytes) { res.destroy(); stream.destroy(); reject(Object.assign(new Error('Response too large'), { status: 413 })); return; }
+      chunks.push(c);
+    });
+    stream.on('end', () => resolve(Buffer.concat(chunks).toString('utf8')));
+    stream.on('error', reject);
+    res.on('error', reject);
+  });
+}
+
+// Fetch a URL. Requests that come from other devices on the network, or from custom widget
+// code, may only reach public addresses, so they can't be used to probe your LAN.
+// Built-in widgets on this computer may reach local services (Home Assistant, a Pi, ...).
 async function safeFetch(rawUrl, { allowPrivate = false, maxBytes = 3 * 1024 * 1024, timeout = 12000 } = {}) {
   let url = String(rawUrl || '').trim().replace(/^webcal:/i, 'https:');
   for (let hop = 0; hop < 4; hop++) {
     let u;
     try { u = new URL(url); } catch { throw Object.assign(new Error('Invalid address'), { status: 400 }); }
     if (!/^https?:$/.test(u.protocol)) throw Object.assign(new Error('Only http and https addresses are allowed'), { status: 400 });
-    if (!allowPrivate) {
-      const host = u.hostname.replace(/^\[|\]$/g, '');
-      const addrs = net.isIP(host) ? [{ address: host }] : await dns.lookup(host, { all: true });
-      if (addrs.some((a) => isPrivateIp(a.address))) throw Object.assign(new Error('Local network addresses only work on the computer running FrameDeck'), { status: 403 });
+    // IP addresses skip DNS (and publicLookup), so check them here.
+    const host = u.hostname.replace(/^\[|\]$/g, '');
+    if (!allowPrivate && net.isIP(host) && isPrivateIp(host)) throw blocked();
+    const res = await request(u, { allowPrivate, timeout });
+    if (res.statusCode >= 300 && res.statusCode < 400 && res.headers.location) {
+      res.resume();
+      url = new URL(res.headers.location, url).toString();
+      continue;
     }
-    const r = await fetch(url, { headers: UA, redirect: 'manual', signal: AbortSignal.timeout(timeout) });
-    if (r.status >= 300 && r.status < 400 && r.headers.get('location')) { url = new URL(r.headers.get('location'), url).toString(); continue; }
-    if (!r.ok) throw Object.assign(new Error(`HTTP ${r.status} from ${u.host}`), { status: 502 });
-    const reader = r.body.getReader();
-    const chunks = []; let size = 0;
-    for (;;) {
-      const { done, value } = await reader.read();
-      if (done) break;
-      size += value.length;
-      if (size > maxBytes) { reader.cancel(); throw Object.assign(new Error('Response too large'), { status: 413 }); }
-      chunks.push(value);
-    }
-    return { text: Buffer.concat(chunks.map((c) => Buffer.from(c))).toString('utf8'), type: r.headers.get('content-type') || '' };
+    if (res.statusCode < 200 || res.statusCode >= 300) { res.resume(); throw Object.assign(new Error(`HTTP ${res.statusCode} from ${u.host}`), { status: 502 }); }
+    return { text: await readBody(res, maxBytes), type: res.headers['content-type'] || '' };
   }
   throw Object.assign(new Error('Too many redirects'), { status: 502 });
 }
@@ -151,7 +194,58 @@ const LEAGUES = {
   epl: 'soccer/eng.1', laliga: 'soccer/esp.1', seriea: 'soccer/ita.1', bundesliga: 'soccer/ger.1',
   ligue1: 'soccer/fra.1', mls: 'soccer/usa.1', ucl: 'soccer/uefa.champions',
 };
-async function scores(league) {
+// Esports: Dota 2 from OpenDota (no account needed); other games from PandaScore with a free token.
+const PANDASCORE = { lol: ['lol', 'League of Legends'], cs2: ['csgo', 'Counter-Strike 2'], valorant: ['valorant', 'Valorant'],
+  overwatch: ['ow', 'Overwatch'], r6: ['r6siege', 'Rainbow Six Siege'], rocketleague: ['rl', 'Rocket League'] };
+const short = (name) => String(name || '').trim();
+
+async function dota() {
+  const get = async (p) => { const r = await fetch('https://api.opendota.com/api/' + p, { headers: UA, signal: AbortSignal.timeout(12000) }); if (!r.ok) throw new Error(`HTTP ${r.status} from OpenDota`); return r.json(); };
+  const [past, live] = await Promise.all([get('proMatches'), get('live').catch(() => [])]);
+  // The live list keeps games for a while after they end (deactivate_time set), so skip those.
+  const finished = new Set(past.map((m) => String(m.match_id)));
+  const liveGames = live.filter((m) => m.league_id > 0 && m.team_name_radiant && m.team_name_dire && !m.deactivate_time && !finished.has(String(m.match_id))).map((m) => ({
+    id: 'live' + m.match_id, date: new Date((m.activate_time || Date.now() / 1000) * 1000).toISOString(), state: 'in',
+    detail: `Live · ${Math.floor((m.game_time || 0) / 60)} min`,
+    home: { abbr: short(m.team_name_radiant), name: short(m.team_name_radiant), score: m.radiant_score ?? '', logo: '', winner: false },
+    away: { abbr: short(m.team_name_dire), name: short(m.team_name_dire), score: m.dire_score ?? '', logo: '', winner: false },
+  }));
+  const done = past.filter((m) => m.radiant_name && m.dire_name).slice(0, 20).map((m) => ({
+    id: String(m.match_id), date: new Date((m.start_time + (m.duration || 0)) * 1000).toISOString(), state: 'post', detail: m.league_name || 'Final',
+    home: { abbr: short(m.radiant_name), name: short(m.radiant_name), score: m.radiant_score ?? '', logo: '', winner: !!m.radiant_win },
+    away: { abbr: short(m.dire_name), name: short(m.dire_name), score: m.dire_score ?? '', logo: '', winner: m.radiant_win === false },
+  }));
+  return { league: 'DOTA 2', esports: true, games: [...liveGames, ...done] };
+}
+
+async function pandascore(game, token) {
+  const [slug, label] = PANDASCORE[game];
+  if (!token) throw Object.assign(new Error('Paste a free PandaScore token in this widget\'s settings (sign up at pandascore.co)'), { status: 400 });
+  const get = async (kind, n) => {
+    const r = await fetch(`https://api.pandascore.co/${slug}/matches/${kind}?per_page=${n}`, { headers: { ...UA, authorization: 'Bearer ' + token }, signal: AbortSignal.timeout(12000) });
+    if (r.status === 401 || r.status === 403) throw Object.assign(new Error('PandaScore didn\'t accept that token'), { status: 400 });
+    if (!r.ok) throw new Error(`HTTP ${r.status} from PandaScore`);
+    return r.json();
+  };
+  const [running, upcoming, past] = await Promise.all([get('running', 10), get('upcoming', 10), get('past', 10)]);
+  const STATE = { running: 'in', not_started: 'pre', finished: 'post' };
+  const games = [...running, ...upcoming, ...past].filter((m) => (m.opponents || []).length === 2 && STATE[m.status]).map((m) => {
+    const team = (i) => {
+      const t = m.opponents[i].opponent || {};
+      const res = (m.results || []).find((x) => x.team_id === t.id) || {};
+      return { abbr: short(t.acronym || t.name), name: short(t.name), score: m.status === 'not_started' ? '' : (res.score ?? ''), logo: t.image_url || '', winner: m.winner_id === t.id };
+    };
+    const league = [m.league && m.league.name, m.serie && m.serie.full_name].filter(Boolean).join(' · ');
+    return { id: String(m.id), date: m.begin_at || m.scheduled_at || new Date().toISOString(), state: STATE[m.status],
+      detail: [m.status === 'running' ? 'Live' : m.number_of_games ? 'Bo' + m.number_of_games : '', league].filter(Boolean).join(' · '),
+      home: team(0), away: team(1) };
+  });
+  return { league: label.toUpperCase(), esports: true, games };
+}
+
+async function scores(league, { token } = {}) {
+  if (league === 'dota2') return dota();
+  if (PANDASCORE[league]) return pandascore(league, token);
   const path = LEAGUES[league];
   if (!path) throw Object.assign(new Error('Unknown league'), { status: 400 });
   const r = await fetch(`https://site.api.espn.com/apis/site/v2/sports/${path}/scoreboard`, { headers: UA, signal: AbortSignal.timeout(12000) });
@@ -201,4 +295,4 @@ function nowPlaying() {
   });
 }
 
-module.exports = { safeFetch, isPrivateIp, parseFeed, parseIcs, scores, nowPlaying, LEAGUES };
+module.exports = { safeFetch, isPrivateIp, parseFeed, parseIcs, scores, nowPlaying, LEAGUES, PANDASCORE };

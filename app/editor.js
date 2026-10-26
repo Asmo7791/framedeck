@@ -238,7 +238,8 @@
     if (!def) return `<div class="insp-head"><span class="ic">⚠️</span><div><b>Missing widget</b><span>This widget's code was deleted.</span></div></div>
       <div class="grp"><div class="btn-row"><button class="btn small danger" data-act="del">Delete</button></div></div>`;
     const s = { ...FD.widgetDefaults(wd.type), ...wd.settings };
-    const fields = def.settings.map((f) => {
+    if (wd.type === 'rss' && !s.feed) s.feed = s.url ? 'custom' : 'bbc-world';
+    const fields = def.settings.filter((f) => !f.showIf || (f.showIf.in ? f.showIf.in.includes(s[f.showIf.key]) : s[f.showIf.key] === f.showIf.is)).map((f) => {
       const v = s[f.key];
       switch (f.type) {
         case 'toggle': return field(f.label, toggleHtml(f.key, v), true);
@@ -840,7 +841,7 @@
 <p><code>text</code>, <code>textarea</code>, <code>select</code> (with <code>options: [['value','Label'], ...]</code>), <code>toggle</code>, <code>datetime</code>, <code>place</code> (city search, gives <code>{ label, lat, lon }</code>), <code>media</code> (picture or video).</p>
 <h4>ctx</h4>
 <p><code>ctx.w</code>, <code>ctx.h</code>: size in pixels · <code>ctx.cls</code>: <code>'xs' | 's' | 'm' | 'l'</code> · <code>ctx.aspect</code>: <code>'wide' | 'tall' | 'square'</code> · <code>ctx.shape</code>: <code>'rect' | 'round'</code> · <code>ctx.color</code>: <code>'full' | 'eink6' | 'mono'</code> · <code>ctx.data</code>, <code>ctx.error</code>: result of <code>data()</code> · <code>ctx.editor</code>: true while editing.</p>
-<p><code>ctx.fetchText(url)</code>: load any web address (no CORS problems) · <code>ctx.fetchJSON(path)</code>: FrameDeck's own data: <code>/api/weather?lat=&amp;lon=&amp;units=f</code>, <code>/api/air</code>, <code>/api/system</code>, <code>/api/hn</code>, <code>/api/rss?url=</code>, <code>/api/ics?url=</code>, <code>/api/scores?league=nba</code>, <code>/api/crypto?ids=bitcoin</code>, <code>/api/nowplaying</code>, <code>/api/geocode?q=</code> · <code>ctx.every(ms, fn)</code>: a timer that stops with the widget.</p>
+<p><code>ctx.fetchText(url)</code>: load any public web address (no CORS problems; local network addresses are blocked) · <code>ctx.fetchJSON(path)</code>: FrameDeck's own data: <code>/api/weather?lat=&amp;lon=&amp;units=f</code>, <code>/api/air</code>, <code>/api/system</code>, <code>/api/hn</code>, <code>/api/rss?url=</code>, <code>/api/ics?url=</code>, <code>/api/scores?league=nba</code>, <code>/api/crypto?ids=bitcoin</code>, <code>/api/nowplaying</code>, <code>/api/geocode?q=</code> · <code>ctx.every(ms, fn)</code>: a timer that stops with the widget.</p>
 <h4>Helpers</h4>
 <p><code>esc(text)</code> escapes text for HTML · <code>ring(percent, label, sub)</code> draws a progress ring · <code>spark(numbers)</code> draws a sparkline · <code>wxIcon(code)</code>, <code>wxLabel(code)</code> weather icons · <code>fitText(el)</code> shrinks text to fit · <code>newsList(el, items, {title, per, every, ctx})</code> a tappable headline list · <code>moonSvg(moonPhase())</code>.</p>
 <h4>Styling</h4>
@@ -1424,7 +1425,7 @@
           <li><b>Share it.</b> <b>Export</b> saves a <code>.framedeck-widget.json</code> file. Others add it with <b>Import</b> under My widgets.</li>
         </ol>
         <p>The <b>Reference</b> tab in the editor lists everything a widget can use: settings, sizes, data from the web, and helpers like rings and sparklines.</p>
-        <p class="note">Widgets you write run in a sandbox: they can't change your layouts or files. They can load data from the internet and your local network, so only import widgets from people you trust.</p>
+        <p class="note">Widgets you write run in a sandbox: they can't change your layouts or files, and they can only load data from public internet addresses, not from your local network.</p>
         <button class="btn primary" data-gact="new-widget">Start a new widget</button>`;
     }
     return `<h2>Page presets & sharing</h2>

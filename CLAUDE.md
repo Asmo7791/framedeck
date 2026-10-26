@@ -25,7 +25,10 @@ Desktop app (Electron) for designing dashboard "screens" and showing them on any
 - Round screens: keep content inside the inscribed square; presets map into 0.16–0.84 of the grid.
 - User-facing text is plain, friendly English; the app is also meant for Chinese-speaking users (date/calendar widgets support zh-CN/zh-TW).
 - `npm run check` (`tools/check.mjs`) syntax-checks every script and smoke-tests the server without Electron; CI runs it on every push.
-- The server rejects requests whose Host header isn't localhost, an IP, or this computer's name (DNS rebinding guard).
+- The server rejects requests whose Host header isn't localhost, an IP, or this computer's name (DNS rebinding guard), and rejects API calls marked cross-site by `sec-fetch-site` / `Origin`.
+- Secret widget settings (`SECRET_SETTINGS` in `src/server.js`: agenda/rss `url`, scores `token`) are replaced with `fd-ref:<widget id>` for non-local clients; endpoints resolve the reference server-side via `feedUrl()`.
+- Custom-widget bridge requests carry `x-framedeck-sandbox: 1` and are treated as non-local (public addresses only). `safeFetch` checks addresses in the connect-time DNS lookup.
+- Widget settings can use `showIf: { key, is }` or `{ key, in: [...] }` to show a field only for some choices.
 - Testing so far was done headless (Electron under Xvfb, with mocked network data, screenshotting the editor and display pages). Check visual changes the same way or by running the app.
 
 ## Open items
@@ -33,4 +36,4 @@ Desktop app (Electron) for designing dashboard "screens" and showing them on any
 - Links are filled in: GitHub `Asmo7791/framedeck`, Venmo `asmo7791`, public email is the GitHub noreply address. The supporter-key pair was regenerated on 2026-10-26 (private key in gitignored `keys/`).
 - Create the GitHub repo and push; first release `v0.2.0`. See `PUBLISHING.md`.
 - Windows and Intel-Mac builds haven't run on real hardware yet.
-- Roadmap: Kraken LCD on Linux via liquidctl, pushing images to e-ink panels, native iOS/Android viewer apps, more widgets (stocks, smart home, esports schedules).
+- Roadmap: Kraken LCD on Linux via liquidctl, pushing images to e-ink panels, native iOS/Android viewer apps, more widgets (stocks, smart home).

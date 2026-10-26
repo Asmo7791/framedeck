@@ -58,7 +58,7 @@ Your layouts are stored in FrameDeck's data folder (Help → Open Data Folder).
 
 ## Widgets
 
-Clock (digital/analog, any time zone), Date (English, 中文 and more), Month calendar, Weather, Countdown, Progress (year/month/week/day), This computer (CPU/memory), Text, Image & video (photos, GIFs, looping videos up to 60 s), Hacker News and News feed (any RSS; tap a headline to read it), World clocks, Calendar events (any iCal link, e.g. Google Calendar), Sports scores, Crypto prices, Air quality, Sun & moon, Now playing (Spotify / Music), Rotating text, Kraken stats (liquid/CPU/GPU temperatures from NZXT CAM), Web page.
+Clock (digital/analog, any time zone), Date (English, 中文 and more), Month calendar, Weather, Countdown, Progress (year/month/week/day), This computer (CPU/memory), Text, Image & video (photos, GIFs, looping videos up to 60 s), Hacker News and News feed (19 ready-made feeds such as BBC, NPR, The Verge and BBC 中文, or any RSS/Atom link; tap a headline to read it), World clocks, Calendar events (any iCal link, e.g. Google Calendar), Sports scores (NBA, NFL, MLB, NHL, soccer, and esports: Dota 2, plus League of Legends, CS2, Valorant, Overwatch, Rainbow Six and Rocket League with a free PandaScore token), Crypto prices, Air quality, Sun & moon, Now playing (Spotify / Music), Rotating text, Kraken stats (liquid/CPU/GPU temperatures from NZXT CAM), Web page (any embeddable page, including StreamElements overlays).
 
 ## Your own widgets (Widget Studio)
 
@@ -80,7 +80,7 @@ FrameDeck is free. If you find it useful, the **♥ Support** button in the app 
 
 - Kraken LCD support on Linux through liquidctl
 - Pushing images to e-ink panels (Raspberry Pi / Waveshare)
-- More widgets: stocks, smart home, esports schedules
+- More widgets: stocks, smart home
 
 ## Develop
 
