@@ -200,7 +200,7 @@ const PANDASCORE = { lol: ['lol', 'League of Legends'], cs2: ['csgo', 'Counter-S
 const short = (name) => String(name || '').trim();
 // FrameDeck's shared esports relay (relay/worker.js), used when a widget has no token of its own.
 // Set FRAMEDECK_ESPORTS_RELAY to use a different one, or to "off" to require a token.
-const DEFAULT_ESPORTS_RELAY = '';
+const DEFAULT_ESPORTS_RELAY = 'https://framedeck-relay.kagura8790.workers.dev';
 const esportsRelay = () => (process.env.FRAMEDECK_ESPORTS_RELAY === 'off' ? '' : (process.env.FRAMEDECK_ESPORTS_RELAY || DEFAULT_ESPORTS_RELAY));
 
 async function dota() {
