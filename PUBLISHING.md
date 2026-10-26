@@ -63,7 +63,11 @@ Unsigned apps work, but people see warnings and have to click through them.
 - Because the code is open source, someone could remove the check. Supporter perks work best as thank-you extras, not as locks on core features.
 - **About Venmo, Zelle and PayPal:** personal accounts are meant for payments between people you know. If you're effectively selling unlocks, or donations grow, consider a PayPal or Venmo business profile, and keep records for taxes.
 
-## 7. Each new version
+## 7. Esports relay
+
+Esports scores for LoL, CS2, Valorant and others come through a small Cloudflare Worker that holds your PandaScore token. See [relay/README.md](relay/README.md) to deploy or update it.
+
+## 8. Each new version
 
 1. Change `"version"` in `package.json` (e.g. `0.2.1`) and add a section to `CHANGELOG.md`.
 2. Commit, then `git tag v0.2.1 && git push && git push --tags`.

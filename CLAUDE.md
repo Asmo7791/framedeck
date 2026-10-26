@@ -28,6 +28,7 @@ Desktop app (Electron) for designing dashboard "screens" and showing them on any
 - The server rejects requests whose Host header isn't localhost, an IP, or this computer's name (DNS rebinding guard), and rejects API calls marked cross-site by `sec-fetch-site` / `Origin`.
 - Secret widget settings (`SECRET_SETTINGS` in `src/server.js`: agenda/rss `url`, scores `token`) are replaced with `fd-ref:<widget id>` for non-local clients; endpoints resolve the reference server-side via `feedUrl()`.
 - Custom-widget bridge requests carry `x-framedeck-sandbox: 1` and are treated as non-local (public addresses only). `safeFetch` checks addresses in the connect-time DNS lookup.
+- Esports: Dota 2 from OpenDota; other games from PandaScore, either with the widget's own token or through the shared relay in `relay/` (a Cloudflare Worker holding one token, caching answers). `DEFAULT_ESPORTS_RELAY` in `src/sources.js` holds its address; `FRAMEDECK_ESPORTS_RELAY` overrides it (`off` disables).
 - Widget settings can use `showIf: { key, is }` or `{ key, in: [...] }` to show a field only for some choices.
 - Testing so far was done headless (Electron under Xvfb, with mocked network data, screenshotting the editor and display pages). Check visual changes the same way or by running the app.
 

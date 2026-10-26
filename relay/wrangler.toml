@@ -1,0 +1,7 @@
+# Cloudflare Worker settings for the FrameDeck esports relay. Deploy with:
+#   npx wrangler deploy
+# and set the token once with:
+#   npx wrangler secret put PANDASCORE_TOKEN
+name = "framedeck-relay"
+main = "worker.js"
+compatibility_date = "2026-10-01"

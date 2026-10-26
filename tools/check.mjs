@@ -15,7 +15,7 @@ const ok = (cond, msg) => { console.log(`${cond ? 'ok  ' : 'FAIL'} ${msg}`); if 
 
 // 1. Syntax
 const files = [];
-for (const dir of ['src', 'app', 'app/shared', 'tools', 'build']) {
+for (const dir of ['src', 'app', 'app/shared', 'tools', 'build', 'relay']) {
   for (const f of fs.readdirSync(path.join(root, dir))) if (/\.(m?js)$/.test(f)) files.push(path.join(dir, f));
 }
 for (const f of files) {
@@ -83,6 +83,40 @@ try {
   ok(await refused('http://localhost:1/'), 'refuses a host name that resolves to a private address');
   ok(await refused('http://127.0.0.1:1/') && await refused('http://[::ffff:7f00:1]:1/') && await refused('http://[fd00::1]/'), 'refuses private IP addresses');
   ok(!sources.isPrivateIp('93.184.216.34') && !sources.isPrivateIp('2606:4700::1111'), 'allows public addresses');
+
+  // Esports relay: run relay/worker.js locally against a fake PandaScore, and point FrameDeck at it.
+  const { default: relay } = await import(path.join(root, 'relay/worker.js'));
+  const realFetch = globalThis.fetch;
+  const upstream = [];
+  const match = { id: 1, status: 'finished', number_of_games: 3, winner_id: 10, league: { name: 'LCK' }, begin_at: '2026-10-26T10:00:00Z',
+    opponents: [{ opponent: { id: 10, acronym: 'T1', name: 'T1' } }, { opponent: { id: 20, acronym: 'GEN', name: 'Gen.G' } }], results: [{ team_id: 10, score: 2 }, { team_id: 20, score: 1 }] };
+  globalThis.fetch = (u, opts) => {
+    if (String(u).startsWith('https://api.pandascore.co/')) {
+      upstream.push({ url: String(u), auth: opts.headers.authorization });
+      return Promise.resolve(new Response(JSON.stringify(String(u).includes('/past') ? [match] : []), { headers: { 'content-type': 'application/json' } }));
+    }
+    return realFetch(u, opts);
+  };
+  const relayServer = http.createServer(async (req, r) => {
+    const out = await relay.fetch(new Request('http://relay' + req.url), { PANDASCORE_TOKEN: 'relay-secret' }, { waitUntil() {} });
+    r.writeHead(out.status, { 'content-type': 'application/json' }); r.end(await out.text());
+  });
+  await new Promise((resolve) => relayServer.listen(0, '127.0.0.1', resolve));
+  process.env.FRAMEDECK_ESPORTS_RELAY = `http://127.0.0.1:${relayServer.address().port}`;
+  try {
+    const viaRelay = await sources.scores('lol', {});
+    ok(viaRelay.games.length === 1 && viaRelay.games[0].away.abbr === 'GEN' && viaRelay.games[0].home.score === 2, 'esports without a token uses the relay');
+    ok(upstream.length === 3 && upstream.every((u) => u.auth === 'Bearer relay-secret'), 'the relay adds its own token');
+    upstream.length = 0;
+    await sources.scores('lol', { token: 'mine' });
+    ok(upstream.length === 3 && upstream.every((u) => u.auth === 'Bearer mine'), 'a personal token goes straight to PandaScore');
+    const bad = await relay.fetch(new Request('http://relay/pandascore/lol/teams'), { PANDASCORE_TOKEN: 'x' }, { waitUntil() {} });
+    ok(bad.status === 404, 'the relay only answers match lists');
+  } finally {
+    delete process.env.FRAMEDECK_ESPORTS_RELAY;
+    globalThis.fetch = realFetch;
+    relayServer.close();
+  }
 } finally {
   server.close();
   fs.rmSync(dataDir, { recursive: true, force: true });

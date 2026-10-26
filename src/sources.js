@@ -198,6 +198,10 @@ const LEAGUES = {
 const PANDASCORE = { lol: ['lol', 'League of Legends'], cs2: ['csgo', 'Counter-Strike 2'], valorant: ['valorant', 'Valorant'],
   overwatch: ['ow', 'Overwatch'], r6: ['r6siege', 'Rainbow Six Siege'], rocketleague: ['rl', 'Rocket League'] };
 const short = (name) => String(name || '').trim();
+// FrameDeck's shared esports relay (relay/worker.js), used when a widget has no token of its own.
+// Set FRAMEDECK_ESPORTS_RELAY to use a different one, or to "off" to require a token.
+const DEFAULT_ESPORTS_RELAY = '';
+const esportsRelay = () => (process.env.FRAMEDECK_ESPORTS_RELAY === 'off' ? '' : (process.env.FRAMEDECK_ESPORTS_RELAY || DEFAULT_ESPORTS_RELAY));
 
 async function dota() {
   const get = async (p) => { const r = await fetch('https://api.opendota.com/api/' + p, { headers: UA, signal: AbortSignal.timeout(12000) }); if (!r.ok) throw new Error(`HTTP ${r.status} from OpenDota`); return r.json(); };
@@ -220,11 +224,14 @@ async function dota() {
 
 async function pandascore(game, token) {
   const [slug, label] = PANDASCORE[game];
-  if (!token) throw Object.assign(new Error('Paste a free PandaScore token in this widget\'s settings (sign up at pandascore.co)'), { status: 400 });
+  if (!token && !esportsRelay()) throw Object.assign(new Error('Paste a free PandaScore token in this widget\'s settings (sign up at pandascore.co)'), { status: 400 });
+  // With a token, ask PandaScore directly; without one, ask the shared relay, which adds its own.
   const get = async (kind, n) => {
-    const r = await fetch(`https://api.pandascore.co/${slug}/matches/${kind}?per_page=${n}`, { headers: { ...UA, authorization: 'Bearer ' + token }, signal: AbortSignal.timeout(12000) });
-    if (r.status === 401 || r.status === 403) throw Object.assign(new Error('PandaScore didn\'t accept that token'), { status: 400 });
-    if (!r.ok) throw new Error(`HTTP ${r.status} from PandaScore`);
+    const r = token
+      ? await fetch(`https://api.pandascore.co/${slug}/matches/${kind}?per_page=${n}`, { headers: { ...UA, authorization: 'Bearer ' + token }, signal: AbortSignal.timeout(12000) })
+      : await fetch(`${esportsRelay().replace(/\/$/, '')}/pandascore/${slug}/matches/${kind}?per_page=${n}`, { headers: UA, signal: AbortSignal.timeout(12000) });
+    if (token && (r.status === 401 || r.status === 403)) throw Object.assign(new Error('PandaScore didn\'t accept that token'), { status: 400 });
+    if (!r.ok) throw new Error(token ? `HTTP ${r.status} from PandaScore` : 'The shared esports feed is unavailable right now. Paste your own free PandaScore token to use it directly.');
     return r.json();
   };
   const [running, upcoming, past] = await Promise.all([get('running', 10), get('upcoming', 10), get('past', 10)]);

@@ -311,7 +311,7 @@
         ['epl', 'Premier League'], ['laliga', 'La Liga'], ['seriea', 'Serie A'], ['bundesliga', 'Bundesliga'], ['ligue1', 'Ligue 1'], ['mls', 'MLS'], ['ucl', 'Champions League'],
         ['dota2', 'Esports · Dota 2'], ['lol', 'Esports · League of Legends'], ['cs2', 'Esports · Counter-Strike 2'], ['valorant', 'Esports · Valorant'],
         ['overwatch', 'Esports · Overwatch'], ['r6', 'Esports · Rainbow Six Siege'], ['rocketleague', 'Esports · Rocket League']] },
-      { key: 'token', label: 'PandaScore token (free at pandascore.co)', type: 'text', default: '', showIf: { key: 'league', in: ['lol', 'cs2', 'valorant', 'overwatch', 'r6', 'rocketleague'] } },
+      { key: 'token', label: 'Your own PandaScore token (optional; free at pandascore.co)', type: 'text', default: '', showIf: { key: 'league', in: ['lol', 'cs2', 'valorant', 'overwatch', 'r6', 'rocketleague'] } },
       { key: 'team', label: 'Only this team (abbreviation or name, optional)', type: 'text', default: '' },
       { key: 'logos', label: 'Show team logos', type: 'toggle', default: true },
     ],
