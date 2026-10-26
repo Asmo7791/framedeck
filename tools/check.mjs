@@ -112,6 +112,9 @@ try {
     ok(upstream.length === 3 && upstream.every((u) => u.auth === 'Bearer mine'), 'a personal token goes straight to PandaScore');
     const bad = await relay.fetch(new Request('http://relay/pandascore/lol/teams'), { PANDASCORE_TOKEN: 'x' }, { waitUntil() {} });
     ok(bad.status === 404, 'the relay only answers match lists');
+    upstream.length = 0;
+    const again = await relay.fetch(new Request('http://relay/pandascore/lol/matches/past?per_page=10'), { PANDASCORE_TOKEN: 'relay-secret' }, { waitUntil() {} });
+    ok(again.headers.get('x-relay-cache') === 'memory' && upstream.length === 0, 'the relay answers repeats from its cache');
   } finally {
     delete process.env.FRAMEDECK_ESPORTS_RELAY;
     globalThis.fetch = realFetch;
