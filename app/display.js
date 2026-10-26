@@ -16,12 +16,13 @@
   async function loadConfig() {
     const r = await FD.fetchJSON('/api/config');
     config = r.config;
+    if (config.language && config.language !== 'en' && FD.lang !== config.language) FD.setLanguage(config.language);
     FD.registerUserWidgets(config);
   }
 
   function showPicker() {
     document.getElementById('wrap').innerHTML = `<div id="picker"><h1>Choose a screen</h1>${config.screens.map((s) =>
-      `<a href="?screen=${encodeURIComponent(s.id)}">${FD.esc(s.name)}<small>${s.profile.w} × ${s.profile.h}${s.profile.shape === 'round' ? ' · round' : ''}</small></a>`).join('')}</div>`;
+      `<a href="?screen=${encodeURIComponent(s.id)}"><span data-i18n-skip>${FD.esc(s.name)}</span><small>${s.profile.w} × ${s.profile.h}${s.profile.shape === 'round' ? ' · round' : ''}</small></a>`).join('')}</div>`;
   }
 
   function fit() {

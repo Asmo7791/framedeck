@@ -16,6 +16,7 @@
   const screenOf = () => cfg.screens.find((s) => s.id === sel.screen) || cfg.screens[0];
   const pageOf = () => { const s = screenOf(); return s && (s.pages.find((p) => p.id === sel.page) || s.pages[0]); };
   const widgetOf = () => { const p = pageOf(); return p && p.widgets.find((w) => w.id === sel.widget); };
+  const confirm = (msg) => window.confirm(FD.tr(msg));
   function toast(msg) { const t = $('#toast'); t.textContent = msg; t.classList.add('show'); clearTimeout(toast.t); toast.t = setTimeout(() => t.classList.remove('show'), 2200); }
   function api(url, opts = {}) {
     return fetch(url, { ...opts, headers: { 'content-type': 'application/json', 'x-framedeck': '1', ...(opts.headers || {}) } }).then(async (r) => {
@@ -71,7 +72,7 @@
     $('#screenList').innerHTML = cfg.screens.map((s) => `
       <li data-id="${s.id}" class="${s.id === sel.screen ? 'sel' : ''}">
         <span class="shape ${s.profile.shape} ${s.profile.color}"></span>
-        <span class="nm">${esc(s.name)}</span>
+        <span class="nm" data-i18n-skip>${esc(s.name)}</span>
         ${openIds.has(s.id) ? '<span class="live" title="Showing on a display"></span>' : ''}
         <span class="sub">${s.profile.w}×${s.profile.h}</span>
       </li>`).join('') || '<li class="muted">No screens yet</li>';
@@ -81,7 +82,7 @@
     if (!s) { $('#pageList').innerHTML = ''; return; }
     $('#pageList').innerHTML = s.pages.map((p, i) => `
       <li data-id="${p.id}" class="${p.id === sel.page ? 'sel' : ''}">
-        <span class="pnum">${i + 1}</span><span class="nm">${esc(p.name)}</span>
+        <span class="pnum">${i + 1}</span><span class="nm" data-i18n-skip>${esc(p.name)}</span>
         <span class="sub">${s.rotate && s.pages.length > 1 ? fmtDur(p.duration) : ''}</span>
       </li>`).join('');
   }
@@ -117,7 +118,7 @@
     else view.update(scr, page);
 
     const colorChip = scr.profile.color === 'eink6' ? '<span class="chip warn">E-ink · 6 colors</span>' : scr.profile.color === 'mono' ? '<span class="chip warn">E-ink · black & white</span>' : '';
-    $('#canvasTitle').innerHTML = `<span>${esc(scr.name)}</span><span class="chip">${scr.profile.w} × ${scr.profile.h}${scr.profile.shape === 'round' ? ' · round' : ''}</span>${colorChip}<span class="chip">${scr.cols} × ${scr.rows} grid</span>`;
+    $('#canvasTitle').innerHTML = `<span data-i18n-skip>${esc(scr.name)}</span><span class="chip">${scr.profile.w} × ${scr.profile.h}${scr.profile.shape === 'round' ? ' · round' : ''}</span>${colorChip}<span class="chip">${scr.cols} × ${scr.rows} grid</span>`;
     $('#emptyNote').hidden = !!(page && page.widgets.length);
     renderOverlay();
   }
@@ -277,7 +278,7 @@
           <button class="btn small" data-act="front">Bring to front</button>
           <button class="btn small danger" data-act="del">Delete</button>
         </div>
-        ${otherPages.length ? field('Move to page', `<select data-act="move-page"><option value="">Choose…</option>${otherPages.map((p) => `<option value="${p.id}">${esc(p.name)}</option>`).join('')}</select>`) : ''}
+        ${otherPages.length ? field('Move to page', `<select data-act="move-page"><option value="">Choose…</option>${otherPages.map((p) => `<option value="${p.id}" data-i18n-skip>${esc(p.name)}</option>`).join('')}</select>`) : ''}
       </div>`;
   }
 
@@ -308,7 +309,7 @@
         })()}
         <div class="btn-row">
           <button class="btn small" data-act="page-dup">Duplicate</button>
-          ${cfg.screens.length > 1 ? `<select data-act="page-copy" style="width:auto;flex:1"><option value="">Copy to screen…</option>${cfg.screens.filter((s) => s.id !== scr.id).map((s) => `<option value="${s.id}">${esc(s.name)}</option>`).join('')}</select>` : ''}
+          ${cfg.screens.length > 1 ? `<select data-act="page-copy" style="width:auto;flex:1"><option value="">Copy to screen…</option>${cfg.screens.filter((s) => s.id !== scr.id).map((s) => `<option value="${s.id}" data-i18n-skip>${esc(s.name)}</option>`).join('')}</select>` : ''}
           ${scr.pages.length > 1 ? '<button class="btn small danger" data-act="page-del">Delete</button>' : ''}
         </div></div>` : ''}
       <div class="grp"><h2>Screen</h2>
@@ -623,12 +624,14 @@
     const pop = $('#settingsPop');
     pop.innerHTML = `
       <h3>Settings</h3>
+      <div class="field"><span>Language</span><select id="langSel" data-i18n-skip>${FD.LANGUAGES.map(([k, l]) => `<option value="${k}" ${k === (cfg.language || 'en') ? 'selected' : ''}>${l}</option>`).join('')}</select></div>
       <div class="field inline"><span>Share displays on my network</span><label class="switch"><input type="checkbox" id="lanToggle" ${cfg.shareOnLan ? 'checked' : ''}><i></i></label></div>
       <p class="note">Lets phones, tablets and other computers on your Wi-Fi open display links. The editor stays on this computer only.</p>
       ${info.loginItem !== null && info.loginItem !== undefined ? `<div class="field inline"><span>Open FrameDeck when I log in</span><label class="switch"><input type="checkbox" id="loginToggle" ${info.loginItem ? 'checked' : ''}><i></i></label></div>
       <p class="note">Displays that were showing when you quit open again automatically.</p>` : ''}
       ${isSupporter() ? `<p class="note">♥ Supporter: ${esc(info.supporter.name)}</p>` : ''}
       <p class="note">FrameDeck ${esc(info.version || '')}${FD.PROJECT && FD.PROJECT.github ? ` · <a href="${esc(FD.PROJECT.github)}" target="_blank" style="color:var(--ui-accent)">GitHub</a>` : ''} · inspired by <a href="https://github.com/Feeengyuuu/EpaperSystem" target="_blank" style="color:var(--ui-accent)">EpaperSystem</a> by Feeengyuuu, which builds on <a href="https://github.com/fatihak/InkyPi" target="_blank" style="color:var(--ui-accent)">InkyPi</a>. Weather from Open-Meteo.</p>`;
+    $('#langSel').onchange = (e) => setLanguage(e.target.value);
     $('#lanToggle').onchange = (e) => {
       commit(() => { cfg.shareOnLan = e.target.checked; }, { rerender: 'none' });
       setTimeout(async () => { try { info = await api('/api/info'); } catch {} renderSettingsPop(); }, 800);
@@ -815,7 +818,7 @@
   const remapTypes = (widgets, map) => widgets.forEach((w) => { if (map[w.type]) w.type = map[w.type]; });
 
   async function confirmCode(n) {
-    return confirm(`This file contains ${n} custom widget${n > 1 ? 's' : ''} with code. Widgets run in a sandbox, but they can load data from the internet and from your local network. Only import files from people you trust.\n\nImport it?`);
+    return confirm(`This file contains ${n} custom widget${n > 1 ? 's' : ''} with code. Widgets run in a sandbox and can only load data from the public internet, but only import files from people you trust.\n\nImport it?`);
   }
 
   // ======================================================================
@@ -872,7 +875,7 @@
     $('#stReset').hidden = !(mode === 'builtin' && (cfg.widgetOverrides || {})[type]);
     $('#stDelete').hidden = mode !== 'custom';
     $('#stKind').textContent = mode === 'builtin' ? ((cfg.widgetOverrides || {})[type] ? 'Built-in · edited' : 'Built-in') : mode === 'custom' ? 'Your widget' : 'New widget';
-    $('#stHelp').innerHTML = HELP;
+    $('#stHelp').innerHTML = FD.i18nHelp() || HELP;
     setTab('js');
     $('#stLog').innerHTML = '';
     $('#studio').showModal();
@@ -1306,13 +1309,26 @@
     const list = cfg.screens.filter(filter || (() => true));
     if (!list.length) return '';
     if (!guideScreen || !list.some((s) => s.id === guideScreen)) guideScreen = list[0].id;
-    return `<label class="g-pick">Screen <select data-gpick>${list.map((s) => `<option value="${s.id}" ${s.id === guideScreen ? 'selected' : ''}>${esc(s.name)} · ${s.profile.w}×${s.profile.h}${s.profile.shape === 'round' ? ' round' : ''}</option>`).join('')}</select></label>`;
+    return `<label class="g-pick">Screen <select data-gpick>${list.map((s) => `<option value="${s.id}" data-i18n-skip ${s.id === guideScreen ? 'selected' : ''}>${esc(s.name)} · ${s.profile.w}×${s.profile.h}${s.profile.shape === 'round' ? ' round' : ''}</option>`).join('')}</select></label>`;
   }
   function shareStep() {
     return lanBase()
       ? `<p class="ok">✓ Network sharing is on. This computer is at <b>${esc(lanBase().replace('http://', ''))}</b>.</p>`
       : `<p>Network sharing is off.</p><button class="btn small primary" data-gact="lan-on">Turn on network sharing</button>
          <p class="note">The first time, macOS may ask whether FrameDeck can accept incoming network connections. Click <b>Allow</b>.</p>`;
+  }
+
+  // What a translated guide needs to build the same live parts (links, pickers, buttons).
+  function guideHelpers() {
+    return {
+      esc, info, cfg, displays, KRAKENS, lanBase, linkBox, screenPicker, shareStep,
+      screen: () => cfg.screens.find((s) => s.id === guideScreen),
+      pickRound() {
+        const rounds = cfg.screens.filter((s) => s.profile.shape === 'round');
+        if (rounds.length && (!guideScreen || !rounds.some((r) => r.id === guideScreen))) guideScreen = rounds[0].id;
+        return rounds;
+      },
+    };
   }
 
   function guideHtml(id) {
@@ -1445,7 +1461,7 @@
   }
   function renderGuide() {
     $('#guideNav').innerHTML = '<h2>Guides</h2>' + GUIDES.map(([k, ic, l]) => `<button class="${k === guideId ? 'on' : ''}" data-guide="${k}"><span>${ic}</span>${esc(l)}</button>`).join('');
-    $('#guideBody').innerHTML = guideHtml(guideId);
+    $('#guideBody').innerHTML = FD.i18nGuide(guideId, guideHelpers()) || guideHtml(guideId);
     $('#guideBody').scrollTop = 0;
   }
   function makeScreen(name, profile, pages) {
@@ -1551,7 +1567,7 @@
       d.venmo ? `<a class="pay venmo" href="${esc(d.venmo)}" target="_blank" rel="noopener"><b>Venmo</b><span>${esc(d.venmo.replace(/^https?:\/\/(account\.)?/, ''))}</span></a>` : '',
       d.zelle ? `<div class="pay zelle"><b>Zelle</b><span>${esc(d.zelle)}</span><button class="btn small" data-copy="${esc(d.zelle)}">Copy</button></div>` : '',
     ].filter(Boolean).join('');
-    const themes = Object.values(FD.THEMES).filter((t) => t.supporter).map((t) => t.name).join(', ');
+    const themes = Object.values(FD.THEMES).filter((t) => t.supporter).map((t) => FD.tr(t.name)).join(FD.lang.startsWith('zh') ? '、' : ', ');
     $('#donateBody').innerHTML = sup.supporter ? `
       <h3>♥ Thank you, ${esc(sup.name)}!</h3>
       <p>You're a FrameDeck supporter${sup.issued ? ` since ${esc(sup.issued)}` : ''}. Supporter themes are unlocked: ${esc(themes)}.</p>
@@ -1596,10 +1612,31 @@
     b.textContent = isSupporter() ? '♥ Supporter' : '♥ Support';
   }
 
+  // ---------- language ----------
+  function setLanguage(lang) {
+    commit(() => { cfg.language = lang; }, { rerender: 'none' });
+    // Changing away from a translation needs the original text back, so wait for the save and reload.
+    if (lang === 'en' || FD.lang !== 'en') setTimeout(() => location.reload(), 600);
+    else FD.setLanguage(lang);
+  }
+  function askLanguage() {
+    const d = $('#langDialog');
+    const suggested = FD.suggestLanguage();
+    $('#langChoices').innerHTML = FD.LANGUAGES.map(([k, l]) => `<button class="lang-choice ${k === suggested ? 'on' : ''}" data-lang="${k}">${l}</button>`).join('');
+    $('#langChoices').onclick = (e) => {
+      const b = e.target.closest('[data-lang]'); if (!b) return;
+      d.close();
+      setLanguage(b.dataset.lang);
+    };
+    d.addEventListener('cancel', (e) => e.preventDefault());
+    d.showModal();
+  }
+
   // ---------- start ----------
   (async () => {
     const r = await api('/api/config');
     cfg = r.config;
+    if (cfg.language && cfg.language !== 'en') FD.setLanguage(cfg.language);
     FD.registerUserWidgets(cfg);
     renderPalette();
     bind();
@@ -1610,5 +1647,6 @@
     updateSupporterUi();
     await refreshDisplays();
     renderAll();
+    if (!cfg.language) askLanguage();
   })().catch((err) => { document.body.innerHTML = `<p style="padding:40px">FrameDeck couldn't load: ${esc(err.message)}</p>`; });
 })();

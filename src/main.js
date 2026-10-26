@@ -121,30 +121,66 @@ function openEditor() {
   editorWin.on('closed', () => { editorWin = null; });
 }
 
-function buildMenu() {
+// Menu text for the interface languages (the editor's own text lives in app/i18n/).
+const MENU_TEXT = {
+  'zh-Hans': {
+    File: '文件', Edit: '编辑', View: '显示', Window: '窗口', Help: '帮助',
+    'About FrameDeck': '关于 FrameDeck', 'Hide FrameDeck': '隐藏 FrameDeck', 'Hide Others': '隐藏其他', 'Show All': '全部显示', 'Quit FrameDeck': '退出 FrameDeck',
+    Undo: '撤销', Redo: '重做', Cut: '剪切', Copy: '复制', Paste: '粘贴', 'Select All': '全选', Close: '关闭', Minimize: '最小化', Zoom: '缩放',
+    'Show Editor': '显示编辑器', 'Close All Displays': '关闭所有显示', Reload: '重新加载', 'Toggle Developer Tools': '开发者工具', 'Toggle Full Screen': '切换全屏',
+    'Inspired by EpaperSystem': '灵感来自 EpaperSystem', 'Open Data Folder': '打开数据文件夹', 'FrameDeck Guides': 'FrameDeck 使用指南',
+  },
+  'zh-Hant': {
+    File: '檔案', Edit: '編輯', View: '顯示', Window: '視窗', Help: '說明',
+    'About FrameDeck': '關於 FrameDeck', 'Hide FrameDeck': '隱藏 FrameDeck', 'Hide Others': '隱藏其他', 'Show All': '全部顯示', 'Quit FrameDeck': '結束 FrameDeck',
+    Undo: '還原', Redo: '重做', Cut: '剪下', Copy: '拷貝', Paste: '貼上', 'Select All': '全選', Close: '關閉', Minimize: '最小化', Zoom: '縮放',
+    'Show Editor': '顯示編輯器', 'Close All Displays': '關閉所有顯示', Reload: '重新載入', 'Toggle Developer Tools': '開發者工具', 'Toggle Full Screen': '切換全螢幕',
+    'Inspired by EpaperSystem': '靈感來自 EpaperSystem', 'Open Data Folder': '打開資料夾', 'FrameDeck Guides': 'FrameDeck 使用指南',
+  },
+};
+
+let menuLanguage = null;
+function buildMenu(language = 'en') {
+  if (language === menuLanguage) return;
+  menuLanguage = language;
+  const t = (text) => (MENU_TEXT[language] || {})[text] || text;
   const isMac = process.platform === 'darwin';
   const template = [
-    ...(isMac ? [{ role: 'appMenu' }] : []),
-    { role: 'fileMenu' },
-    { role: 'editMenu' },
-    {
-      label: 'View',
+    ...(isMac ? [{
+      label: 'FrameDeck',
       submenu: [
-        { label: 'Show Editor', accelerator: 'CmdOrCtrl+1', click: openEditor },
-        { label: 'Close All Displays', accelerator: 'CmdOrCtrl+Shift+W', click: () => { for (const v of displayWins.values()) v.win.close(); } },
-        { type: 'separator' },
-        { role: 'reload' },
-        { role: 'toggleDevTools' },
-        { role: 'togglefullscreen' },
+        { role: 'about', label: t('About FrameDeck') }, { type: 'separator' },
+        { role: 'hide', label: t('Hide FrameDeck') }, { role: 'hideOthers', label: t('Hide Others') }, { role: 'unhide', label: t('Show All') },
+        { type: 'separator' }, { role: 'quit', label: t('Quit FrameDeck') },
+      ],
+    }] : []),
+    { label: t('File'), submenu: [isMac ? { role: 'close', label: t('Close') } : { role: 'quit', label: t('Quit FrameDeck') }] },
+    {
+      label: t('Edit'),
+      submenu: [
+        { role: 'undo', label: t('Undo') }, { role: 'redo', label: t('Redo') }, { type: 'separator' },
+        { role: 'cut', label: t('Cut') }, { role: 'copy', label: t('Copy') }, { role: 'paste', label: t('Paste') }, { role: 'selectAll', label: t('Select All') },
       ],
     },
-    { role: 'windowMenu' },
+    {
+      label: t('View'),
+      submenu: [
+        { label: t('Show Editor'), accelerator: 'CmdOrCtrl+1', click: openEditor },
+        { label: t('Close All Displays'), accelerator: 'CmdOrCtrl+Shift+W', click: () => { for (const v of displayWins.values()) v.win.close(); } },
+        { type: 'separator' },
+        { role: 'reload', label: t('Reload') },
+        { role: 'toggleDevTools', label: t('Toggle Developer Tools') },
+        { role: 'togglefullscreen', label: t('Toggle Full Screen') },
+      ],
+    },
+    { role: 'window', label: t('Window'), submenu: [{ role: 'minimize', label: t('Minimize') }, { role: 'zoom', label: t('Zoom') }, ...(isMac ? [] : [{ role: 'close', label: t('Close') }])] },
     {
       role: 'help',
+      label: t('Help'),
       submenu: [
-        { label: 'Inspired by EpaperSystem', click: () => shell.openExternal('https://github.com/Feeengyuuu/EpaperSystem') },
-        { label: 'Open Data Folder', click: () => shell.openPath(app.getPath('userData')) },
-        { label: 'FrameDeck Guides', click: () => { openEditor(); if (editorWin) editorWin.webContents.executeJavaScript("document.querySelector('#guidesBtn') && document.querySelector('#guidesBtn').click()").catch(() => {}); } },
+        { label: t('Inspired by EpaperSystem'), click: () => shell.openExternal('https://github.com/Feeengyuuu/EpaperSystem') },
+        { label: t('Open Data Folder'), click: () => shell.openPath(app.getPath('userData')) },
+        { label: t('FrameDeck Guides'), click: () => { openEditor(); if (editorWin) editorWin.webContents.executeJavaScript("document.querySelector('#guidesBtn') && document.querySelector('#guidesBtn').click()").catch(() => {}); } },
       ],
     },
   ];
@@ -168,6 +204,7 @@ app.whenReady().then(async () => {
       closeDisplay,
       // Linux has no standard login-item API in Electron, so the setting is hidden there.
       getLoginItem: () => (process.platform === 'linux' ? null : app.getLoginItemSettings().openAtLogin),
+      onConfigChanged: (config) => buildMenu(config.language),
       setLoginItem: (enabled) => { app.setLoginItemSettings({ openAtLogin: enabled, args: process.platform === 'win32' ? ['--hidden'] : [] }); return { enabled }; },
     },
   });
@@ -178,7 +215,7 @@ app.whenReady().then(async () => {
     app.quit();
     return;
   }
-  buildMenu();
+  buildMenu(server.config.language);
 
   // Reopen the displays that were running last time, so it works like a picture frame.
   const restore = (server.config.session && server.config.session.openDisplays) || [];

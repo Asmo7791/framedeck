@@ -317,3 +317,9 @@ a.pay:hover { border-color: var(--ui-accent); }
 .pay.paypal b { color: #4aa3ff; } .pay.venmo b { color: #3d95ce; } .pay.zelle b { color: #a875ff; }
 .reason { background: #2a1a20; border: 1px solid #4a2531; border-radius: 8px; padding: 8px 10px; color: #ffc3d1; }
 .perks { color: #c9cfd9; }
+
+/* first-start language picker */
+.lang-choices { display: grid; gap: 10px; margin: 16px 0; }
+.lang-choice { font: inherit; font-size: 17px; padding: 14px 16px; border-radius: 12px; border: 1px solid var(--ui-line, #2a2f3a); background: transparent; color: inherit; cursor: pointer; text-align: left; }
+.lang-choice:hover { border-color: var(--ui-accent); }
+.lang-choice.on { border-color: var(--ui-accent); background: color-mix(in srgb, var(--ui-accent) 14%, transparent); }

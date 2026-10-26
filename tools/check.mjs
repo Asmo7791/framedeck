@@ -27,6 +27,24 @@ for (const f of files) {
 const { verifyKey } = require(path.join(root, 'src/license.js'));
 ok(verifyKey('FD1-e30.AAAA') === null, 'rejects a forged supporter key');
 
+// 2b. Translations: each pack loads, and every placeholder in a key is used in its translation
+// (except ones stuck to the end of a word, like the plural s in "widget{1}").
+{
+  const vm = await import('vm');
+  const sandbox = { window: {}, navigator: { language: 'en' }, document: {}, location: {} };
+  vm.createContext(sandbox);
+  for (const f of ['app/shared/i18n.js', 'app/i18n/zh-Hans.js', 'app/i18n/zh-Hant.js']) vm.runInContext(fs.readFileSync(path.join(root, f), 'utf8'), sandbox, { filename: f });
+  const FD = sandbox.window.FD;
+  for (const lang of ['zh-Hans', 'zh-Hant']) {
+    const pack = FD.I18N[lang];
+    const bad = Object.entries(pack ? pack.strings : {}).filter(([k, v]) => (k.match(/(^|[^A-Za-z])\{t?\d\}/g) || []).some((p) => !v.includes('{' + p.replace(/\D/g, '') + '}')));
+    ok(pack && Object.keys(pack.strings).length > 300 && typeof pack.guide === 'function' && pack.help, `${lang} translation loads`);
+    ok(!bad.length, `${lang} keeps every placeholder${bad.length ? ': ' + bad.map(([k]) => k).join(' | ') : ''}`);
+  }
+  const zhHans = Object.keys(FD.I18N['zh-Hans'].strings).sort().join('\n');
+  ok(zhHans === Object.keys(FD.I18N['zh-Hant'].strings).sort().join('\n'), 'zh-Hant.js is up to date (run npm run i18n)');
+}
+
 // 3. Local server
 const { createServer } = require(path.join(root, 'src/server.js'));
 const dataDir = fs.mkdtempSync(path.join(os.tmpdir(), 'framedeck-check-'));

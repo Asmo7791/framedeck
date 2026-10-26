@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.3.0
+
+- **Chinese interface**: FrameDeck now speaks 简体中文 and 繁體中文 as well as English, including the guides, the Widget Studio reference, the display page and the app menu.
+- On first start, FrameDeck asks which language to use. Change it any time in **Settings → Language**.
+
 ## 0.2.1
 
 - **News feed** now has 19 ready-made feeds (world news, tech, science, sports, BBC 中文). Choose **Custom link…** to use any RSS or Atom feed.

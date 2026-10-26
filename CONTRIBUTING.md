@@ -24,6 +24,10 @@ Each widget has `settings`, a `render(el, settings, ctx)` function, and optional
 
 You can also build widgets inside the app with **Widget Studio** and share them as files, no pull request needed.
 
+## Translations
+
+The interface text is English in the code. Other languages live in `app/i18n/`: each key is the English text exactly as shown, and `{0}` stands for a name or number inside it. To change Chinese, edit `app/i18n/zh-Hans.js`, then run `npm run i18n` to regenerate `zh-Hant.js` (Traditional Chinese, via OpenCC). `npm run check` reports missing placeholders or an out-of-date `zh-Hant.js`.
+
 ## Style
 
 Keep user-facing text plain and friendly. The date and calendar widgets support Chinese (zh-CN / zh-TW). Please keep that working.

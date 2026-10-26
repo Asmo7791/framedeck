@@ -43,6 +43,9 @@ xattr -cr /Applications/FrameDeck.app
 
 ## Using it
 
+FrameDeck speaks **English, 简体中文 and 繁體中文**. It asks on first start; change it any time in **Settings → Language**.
+
+
 - **Screens** (left): one per physical display. Add one with **+ Add** and pick a size, or "Match a connected display".
 - **Pages**: each screen can rotate through several pages. Set how long each page shows.
 - **Widgets**: click to add, or drag onto the screen. Drag to move, drag the handles to resize, arrow keys nudge, Shift+arrows resize, ⌫ deletes, ⌘D duplicates, ⌘Z undoes.

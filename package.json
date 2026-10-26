@@ -1,6 +1,6 @@
 {
   "name": "framedeck",
-  "version": "0.2.1",
+  "version": "0.3.0",
   "description": "Design your own dashboard screens for any display: monitors, tablets, round cooler LCDs and more",
   "main": "src/main.js",
   "scripts": {
@@ -10,7 +10,8 @@
     "dist:mac": "electron-builder --mac --publish never -c.mac.identity=-",
     "dist:win": "electron-builder --win --publish never",
     "dist:linux": "electron-builder --linux --publish never",
-    "check": "node tools/check.mjs"
+    "check": "node tools/check.mjs",
+    "i18n": "node tools/make-zh-hant.mjs"
   },
   "author": {
     "name": "Kai-Tung Yu",
@@ -20,9 +21,10 @@
   "devDependencies": {
     "@electron/packager": "^20.3.0",
     "electron": "^45.0.0",
+    "electron-builder": "^26.18.0",
+    "opencc-js": "^1.0.5",
     "png2icons": "^2.0.1",
-    "resedit": "^3.1.0",
-    "electron-builder": "^26.18.0"
+    "resedit": "^3.1.0"
   },
   "productName": "FrameDeck",
   "homepage": "https://github.com/Asmo7791/framedeck",
