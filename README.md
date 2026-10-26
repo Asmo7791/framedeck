@@ -6,6 +6,8 @@ Design your own dashboard screens and show them on any display: a spare monitor,
 
 Instead of fixed pages, every screen is a grid you lay out yourself. Widgets pick their own layout from the space they get, so the same weather widget works as a tiny icon on a 240 px round screen and as a full forecast on a 4K monitor.
 
+📖 **Guides:** step-by-step setup for monitors, tablets, NZXT Kraken LCDs and Raspberry Pi, plus the widget reference, are in the **[Wiki](https://github.com/Asmo7791/framedeck/wiki)**.
+
 ## Credit
 
 FrameDeck is inspired by [EpaperSystem](https://github.com/Feeengyuuu/EpaperSystem) by Feeengyuuu, a Raspberry Pi colour e-paper dashboard, which builds on [InkyPi](https://github.com/fatihak/InkyPi). FrameDeck doesn't copy their code; it borrows the idea of a rotating information screen and takes it to more kinds of displays. If you have a Raspberry Pi and an e-ink panel, use EpaperSystem: it's excellent.
