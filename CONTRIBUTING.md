@@ -24,6 +24,16 @@ Each widget has `settings`, a `render(el, settings, ctx)` function, and optional
 
 You can also build widgets inside the app with **Widget Studio** and share them as files, no pull request needed.
 
+## Add-ons
+
+Bigger optional features live in `addons/<name>/` and plug in without the core knowing about them (see `src/addons.js`):
+
+- `server.js` exports `routes` (served at `/api/addons/<name>/…`, with the core API's safety rules), `localOnly` (routes only this computer may call) and optionally `setup(kit)`. Handlers get `(req, url, local, kit)`; `kit` has the add-on's own `dataDir`, `readBody`, `readJSON`, `httpError`, `safeFetch` and `raw`.
+- `client/index.js` is loaded by the editor and display pages before they draw. It can register widgets in `FD.BUILTIN` and `FD.WIDGET_ORDER`, load more files with `FD.loadScript`, and set `FD.addonReady[name]` to a promise while it does.
+- `test/run.mjs` runs as part of `npm run check`.
+
+Widget settings can use `type: 'action'` (a button with `run(api)`) and `options` as a function, and a widget with `noEdit: true` has no code button. `addons/rainmeter/` is a full example.
+
 ## Translations
 
 The interface text is English in the code. Other languages live in `app/i18n/`: each key is the English text exactly as shown, and `{0}` stands for a name or number inside it. To change Chinese, edit `app/i18n/zh-Hans.js`, then run `npm run i18n` to regenerate `zh-Hant.js` (Traditional Chinese, via OpenCC). `npm run check` reports missing placeholders or an out-of-date `zh-Hant.js`.

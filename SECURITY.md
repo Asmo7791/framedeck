@@ -9,6 +9,7 @@ FrameDeck runs a small web server on your computer (port 47820 by default) so di
 - Calendar and news-feed links are hidden from other devices; the server fetches them on their behalf.
 - Anyone on your network can still see the rest of your screens' layouts and settings while sharing is on, including the code and settings of your own widgets. Use it on networks you trust.
 - Unlocking a supporter key sends the key and a random ID made for this computer to FrameDeck's relay, which counts how many computers use each key. Nothing else about your computer is sent.
+- Rainmeter skins are imported without their plugins or programs, their formulas are evaluated without running code, they are drawn on a canvas, and their web requests can only reach public addresses.
 - Custom widgets run in a sandbox, can't reach FrameDeck's settings, and can only load public internet addresses.
 
 ## Reporting a problem

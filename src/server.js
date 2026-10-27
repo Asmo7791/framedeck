@@ -34,7 +34,7 @@ const MIME = {
 const MEDIA_EXT = new Set(['.png', '.jpg', '.jpeg', '.gif', '.webp', '.mp4', '.m4v', '.mov', '.webm']);
 const LOOPBACK = new Set(['127.0.0.1', '::1', '::ffff:127.0.0.1']);
 
-function createServer({ dataDir, staticDir, hooks = {}, port = 47820 }) {
+function createServer({ dataDir, staticDir, hooks = {}, port = 47820, addons = [] }) {
   fs.mkdirSync(dataDir, { recursive: true });
   const mediaDir = path.join(dataDir, 'media');
   fs.mkdirSync(mediaDir, { recursive: true });
@@ -291,6 +291,29 @@ function createServer({ dataDir, staticDir, hooks = {}, port = 47820 }) {
   const LOCAL_ONLY = new Set(['PUT /api/config', 'POST /api/media', 'GET /api/displays',
     'POST /api/open-display', 'POST /api/close-display', 'POST /api/login-item', 'POST /api/supporter']);
 
+  // ---------- add-ons (src/addons.js) ----------
+  // Each add-on's routes live under /api/addons/<name>/ with the same rules as the core API.
+  const RAW = Symbol('raw');
+  const addonRoutes = {};
+  const addonLocalOnly = new Set();
+  for (const a of addons) {
+    const kit = {
+      dataDir: path.join(dataDir, 'addons', a.name),
+      readBody, readJSON, httpError,
+      safeFetch: sources.safeFetch,
+      // A handler can return kit.raw(body, type) to send something other than JSON.
+      raw: (body, type) => ({ [RAW]: true, body, type }),
+    };
+    fs.mkdirSync(kit.dataDir, { recursive: true });
+    for (const [r, fn] of Object.entries(a.routes || {})) {
+      const [method, p] = r.split(' ');
+      addonRoutes[`${method} /api/addons/${a.name}${p}`] = (req, url, local) => fn(req, url, local, kit);
+    }
+    for (const r of a.localOnly || []) { const [method, p] = r.split(' '); addonLocalOnly.add(`${method} /api/addons/${a.name}${p}`); }
+    if (a.setup) a.setup(kit);
+  }
+  api['GET /api/addons'] = () => ({ addons: addons.filter((a) => a.client).map((a) => ({ name: a.name, script: `/addons/${a.name}/index.js` })) });
+
   function httpError(status, message) {
     const e = new Error(message);
     e.status = status;
@@ -359,7 +382,8 @@ function createServer({ dataDir, staticDir, hooks = {}, port = 47820 }) {
         req.on('close', () => clients.delete(res));
         return;
       }
-      if (api[route]) {
+      const handler = api[route] || addonRoutes[route];
+      if (handler) {
         // Pages from other sites (and sandboxed widget frames, whose origin is "null") may
         // not call the API directly. Browsers send these headers on every fetch.
         const site = req.headers['sec-fetch-site'];
@@ -367,15 +391,22 @@ function createServer({ dataDir, staticDir, hooks = {}, port = 47820 }) {
         if (site === 'cross-site' || site === 'same-site' || (origin && origin !== `http://${req.headers.host}`)) {
           return send(res, 403, { error: 'Not allowed from another site' });
         }
-        if (LOCAL_ONLY.has(route) && !local) return send(res, 403, { error: 'Only allowed from this computer' });
+        if ((LOCAL_ONLY.has(route) || addonLocalOnly.has(route)) && !local) return send(res, 403, { error: 'Only allowed from this computer' });
         // Changes need a custom header, which browsers won't send cross-site without permission,
         // so a web page (or a custom widget frame) can't quietly call these endpoints.
         if (req.method !== 'GET' && req.headers['x-framedeck'] !== '1') return send(res, 403, { error: 'Missing FrameDeck header' });
-        return send(res, 200, await api[route](req, url, local));
+        const out = await handler(req, url, local);
+        if (out && out[RAW]) { res.writeHead(200, { 'content-type': out.type || 'application/octet-stream', 'cache-control': 'no-store' }); return res.end(out.body); }
+        return send(res, 200, out);
       }
       if (url.pathname.startsWith('/api/')) return send(res, 404, { error: 'Unknown endpoint' });
       if (req.method !== 'GET') return send(res, 405, { error: 'Method not allowed' });
       if (url.pathname.startsWith('/media/')) return serveFile(res, mediaDir, decodeURIComponent(url.pathname.slice(7)), req);
+      const addonFile = /^\/addons\/([a-z0-9-]+)\/(.+)$/.exec(url.pathname);
+      if (addonFile) {
+        const a = addons.find((x) => x.name === addonFile[1] && x.client);
+        return a ? serveFile(res, a.client, decodeURIComponent(addonFile[2])) : send(res, 404, { error: 'Not found' });
+      }
       if (url.pathname === '/') {
         res.writeHead(302, { location: local ? '/editor.html' : '/display.html' });
         return res.end();

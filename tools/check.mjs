@@ -23,6 +23,20 @@ for (const f of files) {
   catch (e) { ok(false, `parses: ${f}\n${e.stderr}`); }
 }
 
+// 1b. Add-ons: every script parses, and each add-on's own tests pass (addons/<name>/test/run.mjs).
+for (const name of fs.existsSync(path.join(root, 'addons')) ? fs.readdirSync(path.join(root, 'addons')) : []) {
+  const dir = path.join(root, 'addons', name);
+  const walk = (d) => fs.readdirSync(d, { withFileTypes: true }).flatMap((e) => (e.isDirectory() ? walk(path.join(d, e.name)) : /\.m?js$/.test(e.name) ? [path.join(d, e.name)] : []));
+  for (const f of walk(dir)) {
+    try { execFileSync(process.execPath, ['--check', f], { stdio: 'pipe' }); } catch (e) { ok(false, `parses: ${path.relative(root, f)}\n${e.stderr}`); }
+  }
+  const test = path.join(dir, 'test', 'run.mjs');
+  if (fs.existsSync(test)) {
+    try { execFileSync(process.execPath, [test], { stdio: 'pipe' }); ok(true, `add-on "${name}" tests pass`); }
+    catch (e) { ok(false, `add-on "${name}" tests pass\n${e.stdout}`); }
+  }
+}
+
 // 2. Supporter keys: the embedded public key must be a valid Ed25519 key.
 const { verifyKey } = require(path.join(root, 'src/license.js'));
 ok(verifyKey('FD1-e30.AAAA') === null, 'rejects a forged supporter key');
@@ -48,7 +62,8 @@ ok(verifyKey('FD1-e30.AAAA') === null, 'rejects a forged supporter key');
 // 3. Local server
 const { createServer } = require(path.join(root, 'src/server.js'));
 const dataDir = fs.mkdtempSync(path.join(os.tmpdir(), 'framedeck-check-'));
-const server = createServer({ dataDir, staticDir: path.join(root, 'app'), port: 47900 });
+const { loadAddons } = require(path.join(root, 'src/addons.js'));
+const server = createServer({ dataDir, staticDir: path.join(root, 'app'), port: 47900, addons: loadAddons(root) });
 const port = await server.listen();
 const base = `http://127.0.0.1:${port}`;
 const get = (p, headers = {}) => fetch(base + p, { headers, redirect: 'manual' });
@@ -68,6 +83,14 @@ try {
     http.get({ host: '127.0.0.1', port, path: '/api/config', headers: { host: `evil.example:${port}` } }, (r) => { r.resume(); resolve(r.statusCode); }).on('error', reject);
   });
   ok(status === 421, 'rejects requests for other host names (DNS rebinding)');
+
+  // Add-ons are served through the core's generic hooks, with the same rules as the core API.
+  const addonList = await (await get('/api/addons')).json();
+  ok(addonList.addons.some((a) => a.name === 'rainmeter' && a.script === '/addons/rainmeter/index.js'), 'add-ons are listed for the pages');
+  ok((await get('/addons/rainmeter/engine.js')).status === 200 && (await get('/addons/rainmeter/../server.js')).status !== 200, "add-on browser files are served, but not their server code");
+  ok((await get('/api/addons/rainmeter/skins')).status === 200, 'add-on routes work');
+  ok((await fetch(base + '/api/addons/rainmeter/import', { method: 'POST', body: 'x' })).status === 403, 'add-on changes need the FrameDeck header');
+  ok((await get('/api/addons/rainmeter/skins', { 'sec-fetch-site': 'cross-site' })).status === 403, 'add-on routes reject other sites');
 
   // A tiny feed server standing in for a private calendar / RSS link.
   const zlib = await import('zlib');

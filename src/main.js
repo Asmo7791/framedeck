@@ -2,6 +2,7 @@
 const { app, BrowserWindow, screen: electronScreen, shell, Menu, dialog } = require('electron');
 const path = require('path');
 const { createServer } = require('./server');
+const { loadAddons } = require('./addons');
 
 app.setName('FrameDeck');
 if (process.platform === 'win32') app.setAppUserModelId('com.kaitungyu.framedeck');
@@ -197,6 +198,7 @@ app.whenReady().then(async () => {
   server = createServer({
     dataDir: app.getPath('userData'),
     staticDir: path.join(__dirname, '..', 'app'),
+    addons: loadAddons(path.join(__dirname, '..')),
     hooks: {
       version: app.getVersion(),
       listDisplays,

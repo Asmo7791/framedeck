@@ -88,7 +88,7 @@
   }
   const fmtDur = (sec) => (sec >= 3600 ? `${Math.round(sec / 360) / 10}h` : sec >= 60 ? `${Math.round(sec / 6) / 10}m` : `${sec}s`);
   function renderPalette() {
-    const tile = (t, edited) => `<div class="tile" draggable="true" data-type="${esc(t)}" title="${esc(W[t].desc || '')}"><span class="ic">${esc(W[t].icon || '🧩')}</span><span class="tn">${esc(W[t].name)}</span>${edited ? '<span class="edited" title="Code edited">●</span>' : ''}<button class="edit" data-edit="${esc(t)}" title="Edit code" aria-label="Edit ${esc(W[t].name)} code">✎</button></div>`;
+    const tile = (t, edited) => `<div class="tile" draggable="true" data-type="${esc(t)}" title="${esc(W[t].desc || '')}"><span class="ic">${esc(W[t].icon || '🧩')}</span><span class="tn">${esc(W[t].name)}</span>${edited ? '<span class="edited" title="Code edited">●</span>' : ''}${W[t].noEdit ? '' : `<button class="edit" data-edit="${esc(t)}" title="Edit code" aria-label="Edit ${esc(W[t].name)} code">✎</button>`}</div>`;
     const custom = (cfg.customWidgets || []).map((c) => 'custom:' + c.id).filter((t) => W[t]);
     $('#palette').innerHTML = FD.WIDGET_ORDER.map((t) => tile(t, !!(cfg.widgetOverrides || {})[t])).join('') +
       `<div class="pal-sub"><h2>My widgets</h2><span><button class="mini" id="importWidget">Import</button><button class="mini" id="newWidget">+ New</button></span></div>` +
@@ -244,7 +244,8 @@
       const v = s[f.key];
       switch (f.type) {
         case 'toggle': return field(f.label, toggleHtml(f.key, v), true);
-        case 'select': return field(f.label, selectHtml(f.key, f.options, v));
+        case 'select': return field(f.label, selectHtml(f.key, typeof f.options === 'function' ? f.options(s) : f.options, v));
+        case 'action': return field('', `<button class="btn small" data-action-setting="${esc(f.key)}">${esc(f.label)}</button>${f.note ? `<p class="note">${esc(f.note)}</p>` : ''}`);
         case 'textarea': return field(f.label, `<textarea data-k="${f.key}">${esc(v)}</textarea>`);
         case 'datetime': return field(f.label, `<input type="datetime-local" data-k="${f.key}" value="${esc(v)}">`);
         case 'media': return field(f.label, `${v && /\.(mp4|m4v|mov|webm)(\?|$)/i.test(v) ? `<video class="media-prev" src="${esc(v)}" muted autoplay loop playsinline></video>` : `<div class="media-prev" style="${v ? `background-image:url('${esc(v)}')` : ''}"></div>`}
@@ -273,7 +274,7 @@
       </div>
       <div class="grp"><h2>Arrange</h2>
         <div class="btn-row">
-          <button class="btn small" data-act="edit-code">✎ Edit code</button>
+          ${def.noEdit ? '' : '<button class="btn small" data-act="edit-code">✎ Edit code</button>'}
           <button class="btn small" data-act="dup">Duplicate</button>
           <button class="btn small" data-act="front">Bring to front</button>
           <button class="btn small danger" data-act="del">Delete</button>
@@ -344,6 +345,17 @@
 
   function bindInspector(el, scr, wd) {
     const page = pageOf();
+    // Setting buttons (type 'action'): the widget runs its own code, then can save settings.
+    el.querySelectorAll('[data-action-setting]').forEach((b) => b.addEventListener('click', () => {
+      const f = W[wd.type].settings.find((x) => x.key === b.dataset.actionSetting);
+      if (!f || !f.run) return;
+      Promise.resolve(f.run({
+        settings: { ...FD.widgetDefaults(wd.type), ...wd.settings },
+        set: (k, v) => commit(() => { wd.settings = { ...(wd.settings || {}), [k]: v }; }, { rerender: 'canvas' }),
+        refresh: renderInspector,
+        toast,
+      })).catch((err) => toast(err.message));
+    }));
     // Widget settings
     el.querySelectorAll('[data-k]').forEach((inp) => {
       const k = inp.dataset.k;
@@ -1637,6 +1649,7 @@
   (async () => {
     const r = await api('/api/config');
     cfg = r.config;
+    await FD.loadAddons();
     if (cfg.language && cfg.language !== 'en') FD.setLanguage(cfg.language);
     FD.registerUserWidgets(cfg);
     renderPalette();

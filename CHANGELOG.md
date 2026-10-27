@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.4.0
+
+- **Rainmeter skins**: import a `.rmskin` or `.zip` and show Rainmeter skins on any screen, on Mac, Windows and Linux. Supports the common meters and measures, variables, styles, formulas and conditions; plugins and Lua scripts aren't supported. Built as an add-on (`addons/rainmeter/`).
+- **Add-ons**: FrameDeck can load optional features from `addons/<name>/` without the core knowing about them.
+
 ## 0.3.2
 
 - Supporter keys work on up to 3 computers. Unlocking checks in with FrameDeck's server once; after that the key works offline. **Remove key from this computer** frees its place. Keys unlocked before this version keep working.

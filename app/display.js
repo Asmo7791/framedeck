@@ -13,7 +13,10 @@
   const hint = document.getElementById('hint');
   let config, scr, view, pageIndex = 0, timer = null;
 
+  let addonsLoaded = null;
   async function loadConfig() {
+    addonsLoaded = addonsLoaded || FD.loadAddons();
+    await addonsLoaded;
     const r = await FD.fetchJSON('/api/config');
     config = r.config;
     if (config.language && config.language !== 'en' && FD.lang !== config.language) FD.setLanguage(config.language);

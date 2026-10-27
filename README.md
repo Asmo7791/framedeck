@@ -63,7 +63,7 @@ Your layouts are stored in FrameDeck's data folder (Help → Open Data Folder).
 
 ## Widgets
 
-Clock (digital/analog, any time zone), Date (English, 中文 and more), Month calendar, Weather, Countdown, Progress (year/month/week/day), This computer (CPU/memory), Text, Image & video (photos, GIFs, looping videos up to 60 s), Hacker News and News feed (19 ready-made feeds such as BBC, NPR, The Verge and BBC 中文, or any RSS/Atom link; tap a headline to read it), World clocks, Calendar events (any iCal link, e.g. Google Calendar), Sports scores (NBA, NFL, MLB, NHL, soccer, and esports: Dota 2, League of Legends, CS2, Valorant, Overwatch, Rainbow Six and Rocket League), Crypto prices, Air quality, Sun & moon, Now playing (Spotify / Music), Rotating text, Kraken stats (liquid/CPU/GPU temperatures from NZXT CAM), Web page (any embeddable page, including StreamElements overlays).
+Clock (digital/analog, any time zone), Date (English, 中文 and more), Month calendar, Weather, Countdown, Progress (year/month/week/day), This computer (CPU/memory), Text, Image & video (photos, GIFs, looping videos up to 60 s), Hacker News and News feed (19 ready-made feeds such as BBC, NPR, The Verge and BBC 中文, or any RSS/Atom link; tap a headline to read it), World clocks, Calendar events (any iCal link, e.g. Google Calendar), Sports scores (NBA, NFL, MLB, NHL, soccer, and esports: Dota 2, League of Legends, CS2, Valorant, Overwatch, Rainbow Six and Rocket League), Crypto prices, Air quality, Sun & moon, Now playing (Spotify / Music), Rotating text, Kraken stats (liquid/CPU/GPU temperatures from NZXT CAM), Web page (any embeddable page, including StreamElements overlays), and **Rainmeter skins** (import a `.rmskin`; see the [wiki](https://github.com/Asmo7791/framedeck/wiki/Rainmeter-Skins)).
 
 ## Your own widgets (Widget Studio)
 
@@ -98,7 +98,7 @@ npm run dist           # build installers for this computer's system into releas
 
 Pushing a version tag (`git tag v0.2.1 && git push --tags`) builds every platform on GitHub Actions. See [PUBLISHING.md](PUBLISHING.md).
 
-`src/` is the Electron app and local server, `app/` is the editor and display pages, `app/shared/widgets.js` is the widget library.
+`src/` is the Electron app and local server, `app/` is the editor and display pages, `app/shared/widgets.js` is the widget library, and `addons/` holds optional add-ons such as the Rainmeter skin reader.
 
 Bug reports and ideas are welcome in [Issues](https://github.com/Asmo7791/framedeck/issues); see [CONTRIBUTING.md](CONTRIBUTING.md). For security problems, see [SECURITY.md](SECURITY.md).
 
