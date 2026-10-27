@@ -185,6 +185,25 @@
     'Quote': '名言', 'Plain': '普通', 'Big number': '大数字',
     'Liquid temperature': '水温', 'CPU temperature': 'CPU 温度', 'GPU temperature': 'GPU 温度',
 
+    // ---------- health widgets ----------
+    'Pomodoro timer': '番茄钟', 'Focus sessions with short and long breaks': '专注时段，搭配短休息和长休息',
+    'Water tracker': '喝水记录', 'Tap to log a glass; resets every day': '点一下记录一杯水；每天重置',
+    'Habit tracker': '习惯打卡', 'Tick off daily habits and keep your streaks': '每天打卡，保持连续记录',
+    'Move breaks': '活动提醒', 'Reminds you to stand up, stretch and rest your eyes': '提醒你站起来、伸展一下、让眼睛休息',
+    'Focus length': '专注时长', 'Short break': '短休息', 'Long break': '长休息', 'Long break after': '长休息间隔',
+    '{0} focus sessions': '{0} 个专注时段', '{0} minutes': '{0} 分钟', '{0} hours': '{0} 小时',
+    'Start the next session by itself': '自动开始下一个时段', 'Chime when a session ends': '时段结束时响铃',
+    'Glasses a day': '每天几杯', 'Glass size': '每杯容量', 'Show amounts in': '显示单位', 'ml / liters': '毫升 / 升', 'fluid ounces': '液量盎司',
+    'Remind me after': '多久提醒一次',
+    'Habits (one per line)': '习惯（每行一个）', 'Show the last 7 days': '显示最近 7 天', 'Show streaks': '显示连续天数',
+    'A break every': '休息间隔', 'Break ideas (one per line)': '休息建议（每行一条）',
+    'Focus': '专注', 'Start': '开始', 'Pause': '暂停', 'Skip': '跳过',
+    'Glass': '一杯', 'Goal reached!': '目标达成！', 'Time for some water': '该喝水了',
+    "Add habits in this widget's settings.": '在这个小组件的设置中添加习惯。',
+    'Time for a break': '该休息了', 'Tap Done after a break to start the timer.': '休息后点“完成”开始计时。',
+    'Break time!': '休息时间！', 'Next break in': '距离下次休息', 'Done': '完成',
+    'Drink water': '喝水',
+
     // ---------- add a screen ----------
     'Add a screen': '添加屏幕',
     "Pick what you'll show it on. You can change the size later and the layout stretches to fit.": '选择要显示在哪种屏幕上。之后可以更改尺寸，布局会自动拉伸适应。',

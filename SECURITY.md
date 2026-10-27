@@ -7,6 +7,7 @@ FrameDeck runs a small web server on your computer (port 47820 by default) so di
 - Requests from other devices can only fetch public internet addresses, so a shared display can't be used to probe your network. The address is checked when connecting, so DNS tricks can't swap in a private one.
 - FrameDeck only answers to its own addresses (localhost, IP addresses, or this computer's name), and rejects API calls from other websites.
 - Calendar and news-feed links are hidden from other devices; the server fetches them on their behalf.
+- Phones and tablets showing a screen can use its tap-to-use widgets (log water, tick habits, run the pomodoro). They can only do those few things, and only for widgets in your layouts.
 - Anyone on your network can still see the rest of your screens' layouts and settings while sharing is on, including the code and settings of your own widgets. Use it on networks you trust.
 - Unlocking a supporter key sends the key and a random ID made for this computer to FrameDeck's relay, which counts how many computers use each key. Nothing else about your computer is sent.
 - Rainmeter skins are imported without their plugins or programs, their formulas are evaluated without running code, they are drawn on a canvas, and their web requests can only reach public addresses.

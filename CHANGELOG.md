@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.5.0
+
+- **Health widgets you can tap**: a **Pomodoro timer** (focus sessions, short and long breaks, optional chime), a **Water tracker** (tap ＋ for each glass, daily goal and reminders), a **Habit tracker** (tick off habits, 7-day view and streaks) and **Move breaks** (a countdown to your next stretch).
+- Their progress is saved on the computer running FrameDeck and shared by every screen, so a glass logged on a tablet shows everywhere.
+
 ## 0.4.0
 
 - **Rainmeter skins**: import a `.rmskin` or `.zip` and show Rainmeter skins on any screen, on Mac, Windows and Linux. Supports the common meters and measures, variables, styles, formulas and conditions; plugins and Lua scripts aren't supported. Built as an add-on (`addons/rainmeter/`).

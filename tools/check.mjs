@@ -84,6 +84,29 @@ try {
   });
   ok(status === 421, 'rejects requests for other host names (DNS rebinding)');
 
+  // Interactive widget state (water, habits, pomodoro, move breaks).
+  {
+    const cur = (await (await get('/api/config')).json()).config;
+    const page = cur.screens[0].pages[0];
+    page.widgets.push({ id: 'w-water', type: 'water', x: 0, y: 0, w: 2, h: 2, settings: {} },
+      { id: 'w-hab', type: 'habits', x: 0, y: 0, w: 2, h: 2, settings: {} },
+      { id: 'w-pomo', type: 'pomodoro', x: 0, y: 0, w: 2, h: 2, settings: {} });
+    await fetch(base + '/api/config', { method: 'PUT', headers: { 'x-framedeck': '1' }, body: JSON.stringify({ config: cur }) });
+    const act = (body, headers = {}) => fetch(base + '/api/state', { method: 'POST', headers: { 'x-framedeck': '1', ...headers }, body: JSON.stringify(body) });
+    await act({ id: 'w-water', op: 'add' });
+    const phone = await act({ id: 'w-water', op: 'add' }, { 'x-framedeck-sandbox': '1' }); // counts as another device
+    ok(phone.status === 200 && (await phone.json()).state.count === 2, 'water: glasses add up, also from a phone or tablet');
+    const h = await (await act({ id: 'w-hab', op: 'toggle', habit: 2 })).json();
+    ok(h.state.done[h.day].join() === '2', 'habits: ticking a habit marks today');
+    const p1 = await (await act({ id: 'w-pomo', op: 'start', seconds: 1500 })).json();
+    ok(p1.state.running && Math.abs(p1.state.endsAt - p1.now - 1500000) < 50, 'pomodoro: start sets the end time on this computer');
+    const p2 = await (await act({ id: 'w-pomo', op: 'next', expect: 12345, phase: 'short', round: 1, seconds: 300, run: true })).json();
+    ok(p2.state.phase === 'focus', 'pomodoro: a late "next" from another screen is ignored');
+    ok((await act({ id: 'w-water', op: 'explode' })).status === 400 && (await act({ id: 'w-hab', op: 'toggle', habit: 999 })).status === 400, 'state: unknown actions and bad values are refused');
+    ok((await act({ id: cur.screens[0].pages[0].widgets[0].id, op: 'add' })).status === 404, 'state: only interactive widgets have state');
+    ok((await act({ id: 'w-water', op: 'add' }, { 'x-framedeck': '' })).status === 403, 'state changes need the FrameDeck header');
+  }
+
   // Add-ons are served through the core's generic hooks, with the same rules as the core API.
   const addonList = await (await get('/api/addons')).json();
   ok(addonList.addons.some((a) => a.name === 'rainmeter' && a.script === '/addons/rainmeter/index.js'), 'add-ons are listed for the pages');

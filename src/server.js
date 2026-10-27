@@ -12,6 +12,7 @@ const crypto = require('crypto');
 const { defaultConfig } = require('./defaults');
 const sources = require('./sources');
 const { licenseStore } = require('./license');
+const { stateStore, today } = require('./widgetstate');
 
 const MIME = {
   '.html': 'text/html; charset=utf-8',
@@ -40,6 +41,7 @@ function createServer({ dataDir, staticDir, hooks = {}, port = 47820, addons = [
   fs.mkdirSync(mediaDir, { recursive: true });
   const configPath = path.join(dataDir, 'config.json');
   const license = licenseStore(dataDir);
+  const widgetState = stateStore(dataDir);
 
   // ---------- config ----------
   let config;
@@ -133,7 +135,29 @@ function createServer({ dataDir, staticDir, hooks = {}, port = 47820, addons = [
     return url;
   }
 
+  // The type of a widget in the layout, by id (for interactive widget state).
+  function widgetType(id) {
+    for (const scr of config.screens || []) for (const page of scr.pages || []) for (const w of page.widgets || []) if (w.id === id) return w.type;
+    return null;
+  }
+
   const api = {
+    // Interactive widgets (water, habits, pomodoro, move breaks). Displays on other devices
+    // may change these, so only these widget types and their checked actions are accepted.
+    'GET /api/state': (req, url) => {
+      const id = String(url.searchParams.get('id') || '');
+      if (!widgetState.types.has(widgetType(id))) throw httpError(404, 'No such widget');
+      return { state: widgetState.get(id), now: Date.now(), day: today() };
+    },
+    'POST /api/state': async (req) => {
+      const body = await readJSON(req);
+      const id = String(body.id || '');
+      const type = widgetType(id);
+      if (!widgetState.types.has(type)) throw httpError(404, 'No such widget');
+      const state = widgetState.apply(id, type, body);
+      broadcast('state', { id });
+      return { state, now: Date.now(), day: today() };
+    },
     'GET /api/config': (req, url, local) => ({ revision, config: local ? config : hideFeedUrls(config) }),
     'PUT /api/config': async (req) => {
       const body = await readJSON(req);
@@ -143,6 +167,7 @@ function createServer({ dataDir, staticDir, hooks = {}, port = 47820, addons = [
       config = { ...body.config, session: config.session || { openDisplays: [] } };
       revision += 1;
       saveConfig();
+      widgetState.prune(new Set((config.screens || []).flatMap((x) => (x.pages || []).flatMap((p) => (p.widgets || []).map((w) => w.id)))));
       broadcast('config', { revision });
       if (lanChanged) setTimeout(() => listen(), 50);
       if (hooks.onConfigChanged) hooks.onConfigChanged(config);
