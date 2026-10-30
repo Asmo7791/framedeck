@@ -1,0 +1,17 @@
+<!-- FrameDeck icon for phones and tablets: full-bleed square, the device rounds the corners. -->
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024">
+  <rect width="1024" height="1024" fill="#181c24"/>
+  <g fill="#ff8a3d">
+    <rect x="212" y="212" width="164" height="164" rx="40"/>
+    <rect x="430" y="212" width="164" height="164" rx="40"/>
+    <rect x="648" y="212" width="164" height="164" rx="40"/>
+    <rect x="212" y="430" width="164" height="164" rx="40"/>
+    <rect x="430" y="430" width="164" height="164" rx="40"/>
+    <rect x="212" y="648" width="164" height="164" rx="40"/>
+  </g>
+  <g fill="#2c3240">
+    <rect x="648" y="430" width="164" height="164" rx="40"/>
+    <rect x="430" y="648" width="164" height="164" rx="40"/>
+    <rect x="648" y="648" width="164" height="164" rx="40"/>
+  </g>
+</svg>

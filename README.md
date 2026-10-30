@@ -1,3 +1,5 @@
+<p align="center"><img src="docs/images/logo.svg" width="96" alt="FrameDeck logo: a grid of tiles forming an F"></p>
+
 # FrameDeck
 
 [![Release](https://img.shields.io/github/v/release/Asmo7791/framedeck?sort=semver&display_name=tag)](https://github.com/Asmo7791/framedeck/releases/latest) ![Platforms](https://img.shields.io/badge/platforms-macOS%20%7C%20Windows%20%7C%20Linux%20%7C%20Raspberry%20Pi-ff8a3d) ![License: MIT](https://img.shields.io/badge/license-MIT-blue)

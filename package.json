@@ -11,7 +11,8 @@
     "dist:win": "electron-builder --win --publish never",
     "dist:linux": "electron-builder --linux --publish never",
     "check": "node tools/check.mjs",
-    "i18n": "node tools/make-zh-hant.mjs"
+    "i18n": "node tools/make-zh-hant.mjs",
+    "icons": "electron tools/make-icons.cjs"
   },
   "author": {
     "name": "Kai-Tung Yu",

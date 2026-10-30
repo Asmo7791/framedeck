@@ -1,0 +1,16 @@
+<!-- FrameDeck mark (Grid F). The unlit tiles are see-through orange, so it reads on light and dark pages. -->
+<svg xmlns="http://www.w3.org/2000/svg" width="120" height="120" viewBox="0 0 120 120">
+  <g fill="#ff8a3d">
+    <rect x="10" y="10" width="28" height="28" rx="7"/>
+    <rect x="46" y="10" width="28" height="28" rx="7"/>
+    <rect x="82" y="10" width="28" height="28" rx="7"/>
+    <rect x="10" y="46" width="28" height="28" rx="7"/>
+    <rect x="46" y="46" width="28" height="28" rx="7"/>
+    <rect x="10" y="82" width="28" height="28" rx="7"/>
+  </g>
+  <g fill="#ff8a3d" opacity="0.22">
+    <rect x="82" y="46" width="28" height="28" rx="7"/>
+    <rect x="46" y="82" width="28" height="28" rx="7"/>
+    <rect x="82" y="82" width="28" height="28" rx="7"/>
+  </g>
+</svg>

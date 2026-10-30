@@ -26,8 +26,8 @@ h2 { font-size: 11px; text-transform: uppercase; letter-spacing: .09em; color: v
   background: var(--ui-panel); -webkit-app-region: drag; }
 .topbar button, .topbar input, .topbar label { -webkit-app-region: no-drag; }
 .brand { font-weight: 700; font-size: 14px; display: flex; align-items: center; gap: 9px; letter-spacing: -.01em; }
-.logo { width: 18px; height: 14px; border-radius: 3px; border: 2px solid var(--ui-accent); position: relative; }
-.logo::after { content: ''; position: absolute; left: 2px; right: 6px; top: 2px; height: 2px; background: var(--ui-accent); box-shadow: 0 4px 0 var(--ui-accent); }
+.logo { width: 18px; height: 18px; flex: none; color: var(--ui-accent); }
+.logo .dim { opacity: .25; }
 .top-mid { display: flex; align-items: center; gap: 6px; }
 .top-right { margin-left: auto; display: flex; gap: 8px; }
 .save-state { color: var(--ui-muted); font-size: 12px; margin-left: 6px; }

@@ -1,0 +1,17 @@
+<!-- FrameDeck app icon (master). Grid F: a 3x3 grid of tiles, six lit to form an F. tools/make-icons.mjs turns this into every icon file. -->
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024">
+  <rect x="100" y="100" width="824" height="824" rx="185" fill="#181c24"/>
+  <g fill="#ff8a3d">
+    <rect x="252" y="252" width="148" height="148" rx="36"/>
+    <rect x="438" y="252" width="148" height="148" rx="36"/>
+    <rect x="624" y="252" width="148" height="148" rx="36"/>
+    <rect x="252" y="438" width="148" height="148" rx="36"/>
+    <rect x="438" y="438" width="148" height="148" rx="36"/>
+    <rect x="252" y="624" width="148" height="148" rx="36"/>
+  </g>
+  <g fill="#2c3240">
+    <rect x="624" y="438" width="148" height="148" rx="36"/>
+    <rect x="438" y="624" width="148" height="148" rx="36"/>
+    <rect x="624" y="624" width="148" height="148" rx="36"/>
+  </g>
+</svg>
