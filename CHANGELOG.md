@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.5.3
+
+- **New logo and app icon:** a grid of tiles forming an F, like widgets on FrameDeck's editor grid. It's on the app icon (Mac, Windows, Linux), the home-screen icon on phones and tablets, the browser tab and the editor's top bar.
+
 ## 0.5.2
 
 - The **This computer** widget shows memory use correctly on Macs (it showed about 99%).
