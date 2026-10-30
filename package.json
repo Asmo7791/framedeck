@@ -22,7 +22,7 @@
     "@electron/packager": "^20.3.0",
     "electron": "^45.0.0",
     "electron-builder": "^26.18.0",
-    "opencc-js": "^1.0.5",
+    "opencc-js": "^1.4.2",
     "png2icons": "^2.0.1",
     "resedit": "^3.1.0"
   },

@@ -28,7 +28,7 @@
     '+ New': '+ 新建',
     'Write your own in HTML, CSS and JavaScript. Click + New.': '用 HTML、CSS 和 JavaScript 自己寫一個。點選「+ 新建」。',
     'Grid': '網格',
-    'Live data': '實時資料',
+    'Live data': '即時資料',
     'This page is empty. Click a widget on the left to add it.': '這個頁面是空的。點選左側的小元件即可新增。',
     'Add a screen to start': '先新增一個螢幕',
     '{0} · round': '{0} · 圓形',
@@ -337,9 +337,9 @@
     'Start from a template': '從模板開始', 'Start from a template…': '從模板開始…',
     'Blank': '空白', 'Quote of the day (from an API)': '每日名言（來自 API）', 'Big number from any JSON': '任意 JSON 中的大數字', 'Drawing with canvas': '用 canvas 繪圖',
     'Run (⌘↩)': '執行 (⌘↩)', '▶ Run': '▶ 執行', 'Reset to original': '還原為原始版本', 'Save as…': '另存為…', 'Save': '儲存', 'Save (⌘S)': '儲存 (⌘S)',
-    'Reference': '參考', 'Preview': '預覽', 'Console': '控制檯', 'Clear': '清除',
+    'Reference': '參考', 'Preview': '預覽', 'Console': '控制台', 'Clear': '清除',
     'Unsaved changes': '有未儲存的更改', 'Not saved yet': '尚未儲存',
-    'Fix the errors in the console before saving': '請先修復控制檯中的錯誤再儲存',
+    'Fix the errors in the console before saving': '請先修復控制台中的錯誤再儲存',
     'Save as a new widget': '另存為新小元件',
     'The original stays as it is. Your new widget appears under My widgets.': '原來的保持不變。新小元件會出現在「我的小元件」中。',
     'Close without saving your changes?': '不儲存更改就關閉？',
@@ -470,9 +470,9 @@
       return `<h2>編寫自己的小元件</h2>
         <ol class="steps">
           <li><b>新建一個。</b>在「小元件 → 我的小元件」下點選 <b>+ 新建</b>。選一個模板作為起點，或者保留空白模板。</li>
-          <li><b>編輯程式碼。</b><b>JavaScript</b> 標籤用來描述並繪製小元件，<b>CSS</b> 標籤用來設定樣式。右側的預覽會隨著你輸入實時執行，並同時顯示多種螢幕尺寸，包括圓形屏和墨水屏。錯誤資訊和 <code>console.log()</code> 會顯示在控制檯中。</li>
+          <li><b>編輯程式碼。</b><b>JavaScript</b> 標籤用來描述並繪製小元件，<b>CSS</b> 標籤用來設定樣式。右側的預覽會隨著你輸入即時執行，並同時顯示多種螢幕尺寸，包括圓形屏和墨水屏。錯誤資訊和 <code>console.log()</code> 會顯示在控制台中。</li>
           <li><b>儲存。</b><b>儲存</b>（<kbd>⌘S</kbd>）會更新所有用到這個小元件的地方。<b>另存為…</b> 會保留原來的，另建一個新小元件。</li>
-          <li><b>修改內建小元件。</b>把滑鼠移到列表中的任意小元件上並點選 <b>✎</b>，或者在螢幕上選中一個後點選<b>編輯程式碼</b>。儲存會在所有地方生效；<b>還原為原始版本</b>可以撤銷修改。「另存為」會生成你自己的副本，內建的保持不變。</li>
+          <li><b>修改內建小元件。</b>把滑鼠移到列表中的任意小元件上並點選 <b>✎</b>，或者在螢幕上選中一個後點擊<b>編輯程式碼</b>。儲存會在所有地方生效；<b>還原為原始版本</b>可以撤銷修改。「另存為」會生成你自己的副本，內建的保持不變。</li>
           <li><b>分享。</b><b>匯出</b>會儲存為 <code>.framedeck-widget.json</code> 檔案。別人可以在「我的小元件」下用<b>匯入</b>新增。</li>
         </ol>
         <p>編輯器中的<b>參考</b>標籤列出了小元件能用的一切：設定項、尺寸、網路資料，以及圓環圖、迷你折線圖等輔助函式。</p>
@@ -514,7 +514,7 @@
 <p><code>esc(text)</code> 為 HTML 轉義文字 · <code>ring(percent, label, sub)</code> 繪製進度圓環 · <code>spark(numbers)</code> 繪製迷你折線圖 · <code>wxIcon(code)</code>、<code>wxLabel(code)</code> 天氣圖示 · <code>fitText(el)</code> 縮小文字以適應大小 · <code>newsList(el, items, {title, per, every, ctx})</code> 可點選的標題列表 · <code>moonSvg(moonPhase())</code>。</p>
 <h4>樣式</h4>
 <p>使用主題顏色，讓小元件在每個螢幕上都協調：<code>var(--fg)</code>、<code>var(--muted)</code>、<code>var(--accent)</code>、<code>var(--bg)</code>、<code>var(--radius)</code>、<code>var(--font)</code>。用 <code>min(10cqw, 20cqh)</code> 這樣的容器單位設定文字大小，文字就會隨小元件縮放。</p>
-<p><code>console.log()</code> 會顯示在右側的控制檯中。用 <code>window.open()</code> 開啟的連結會在你的瀏覽器中開啟。</p>`;
+<p><code>console.log()</code> 會顯示在右側的控制台中。用 <code>window.open()</code> 開啟的連結會在你的瀏覽器中開啟。</p>`;
 
   // ---------- display page ----------
   Object.assign(strings, {
