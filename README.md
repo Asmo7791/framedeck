@@ -1,6 +1,6 @@
 # FrameDeck
 
-[![Release](https://img.shields.io/github/v/release/Asmo7791/framedeck?include_prereleases)](https://github.com/Asmo7791/framedeck/releases/latest) ![Platforms](https://img.shields.io/badge/platforms-macOS%20%7C%20Windows%20%7C%20Linux%20%7C%20Raspberry%20Pi-ff8a3d) ![License: MIT](https://img.shields.io/badge/license-MIT-blue)
+[![Release](https://img.shields.io/github/v/release/Asmo7791/framedeck?sort=semver&display_name=tag)](https://github.com/Asmo7791/framedeck/releases/latest) ![Platforms](https://img.shields.io/badge/platforms-macOS%20%7C%20Windows%20%7C%20Linux%20%7C%20Raspberry%20Pi-ff8a3d) ![License: MIT](https://img.shields.io/badge/license-MIT-blue)
 
 Design your own dashboard screens and show them on any display: a spare monitor, your laptop screen, a tablet or old phone on your Wi-Fi, a round cooler-style screen, or an e-ink panel.
 
