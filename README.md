@@ -6,6 +6,18 @@ Design your own dashboard screens and show them on any display: a spare monitor,
 
 Instead of fixed pages, every screen is a grid you lay out yourself. Widgets pick their own layout from the space they get, so the same weather widget works as a tiny icon on a 240 px round screen and as a full forecast on a 4K monitor.
 
+![The FrameDeck editor](docs/images/editor.png)
+
+| On a monitor | On a tablet (tap to use) |
+|---|---|
+| ![A desk monitor dashboard](docs/images/desk.png) | ![Pomodoro, water and habit widgets on a tablet](docs/images/tablet.png) |
+| **On a round cooler screen (NZXT Kraken size)** | **On an e-ink panel** |
+| ![A clock on a round 640 px screen](docs/images/round.png) | ![A 6-color e-ink layout](docs/images/eink.png) |
+
+Also in 简体中文 and 繁體中文:
+
+![The editor in Simplified Chinese](docs/images/editor-zh.png)
+
 📖 **Guides:** step-by-step setup for monitors, tablets, NZXT Kraken LCDs and Raspberry Pi, plus the widget reference, are in the **[Wiki](https://github.com/Asmo7791/framedeck/wiki)**.
 
 ## Credit

@@ -9,6 +9,7 @@ const path = require('path');
 const os = require('os');
 const net = require('net');
 const crypto = require('crypto');
+const { execFile } = require('child_process');
 const { defaultConfig } = require('./defaults');
 const sources = require('./sources');
 const { licenseStore } = require('./license');
@@ -149,6 +150,22 @@ function createServer({ dataDir, staticDir, hooks = {}, port = 47820, addons = [
   const versionParts = (v) => String(v || '').replace(/^v/, '').split('.').map((n) => parseInt(n, 10) || 0);
   const newer = (a, b) => { const x = versionParts(a), y = versionParts(b); for (let i = 0; i < 3; i++) if ((x[i] || 0) !== (y[i] || 0)) return (x[i] || 0) > (y[i] || 0); return false; };
 
+  // Used memory. macOS counts its file cache as used (so "free" is always near zero);
+  // count active + wired + compressed pages instead, like Activity Monitor.
+  let memCache = { at: 0, used: 0 };
+  function memoryUsed() {
+    const total = os.totalmem();
+    if (process.platform !== 'darwin') return Promise.resolve(total - os.freemem());
+    if (Date.now() - memCache.at < 3000) return Promise.resolve(memCache.used);
+    return new Promise((resolve) => execFile('vm_stat', { timeout: 3000 }, (err, out) => {
+      const page = Number((/page size of (\d+)/.exec(out || '') || [])[1] || 4096);
+      const pages = (label) => Number((new RegExp(`${label}:\\s+(\\d+)`).exec(out || '') || [])[1] || 0);
+      const used = (pages('Pages active') + pages('Pages wired down') + pages('Pages occupied by compressor')) * page;
+      memCache = { at: Date.now(), used: !err && used > 0 && used <= total ? used : total - os.freemem() };
+      resolve(memCache.used);
+    }));
+  }
+
   const api = {
     'GET /api/update': async () => {
       if (config.checkUpdates === false) return { disabled: true };
@@ -201,13 +218,12 @@ function createServer({ dataDir, staticDir, hooks = {}, port = 47820, addons = [
       loginItem: hooks.getLoginItem ? hooks.getLoginItem() : null,
       supporter: license.get(),
     }),
-    'GET /api/system': () => {
+    'GET /api/system': async () => {
       const total = os.totalmem();
-      const free = os.freemem();
       return {
         cpu: Math.round(cpuPct),
         cores: os.cpus().length,
-        memUsed: total - free,
+        memUsed: await memoryUsed(),
         memTotal: total,
         uptime: os.uptime(),
         load: os.loadavg(),
