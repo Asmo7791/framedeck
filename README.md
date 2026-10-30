@@ -8,7 +8,7 @@ Instead of fixed pages, every screen is a grid you lay out yourself. Widgets pic
 
 [![Watch the 60-second FrameDeck video](docs/images/video-poster.jpg)](https://cdn.jsdelivr.net/gh/Asmo7791/framedeck@main/docs/media/framedeck-promo.mp4)
 
-▶️ **[Watch the 60-second video](https://cdn.jsdelivr.net/gh/Asmo7791/framedeck@main/docs/media/framedeck-promo.mp4)** · [15-second vertical cut](https://cdn.jsdelivr.net/gh/Asmo7791/framedeck@main/docs/media/framedeck-promo-vertical.mp4)
+▶️ **[Watch the 60-second video](https://cdn.jsdelivr.net/gh/Asmo7791/framedeck@main/docs/media/framedeck-promo.mp4)** · [15-second vertical cut](https://cdn.jsdelivr.net/gh/Asmo7791/framedeck@main/docs/media/framedeck-promo-vertical.mp4) · Music: "I Feel It All So Deeply" by Bail Bonds
 
 ![The FrameDeck editor](docs/images/editor.png)
 
