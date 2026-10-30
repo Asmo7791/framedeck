@@ -1,6 +1,6 @@
 {
   "name": "framedeck",
-  "version": "0.5.1",
+  "version": "0.5.2",
   "description": "Design your own dashboard screens for any display: monitors, tablets, round cooler LCDs and more",
   "main": "src/main.js",
   "scripts": {

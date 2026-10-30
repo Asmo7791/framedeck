@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.5.2
+
+- The **This computer** widget shows memory use correctly on Macs (it showed about 99%).
+- Traditional Chinese wording updates (即時, 控制台).
+
 ## 0.5.1 (security)
 
 - Links from widgets (like a news feed's "Open article") only open web pages, never files or other programs. App windows stay on FrameDeck's own pages.
