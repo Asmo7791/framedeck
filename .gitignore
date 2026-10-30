@@ -8,3 +8,6 @@ keys/
 *.pem
 *.p12
 .env
+
+# Private notes
+marketing-drafts.md
