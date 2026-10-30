@@ -521,6 +521,7 @@
         const s = data.screen;
         if (!s || !s.profile || !Array.isArray(s.pages)) throw new Error('Not a FrameDeck layout file');
         if (data.customWidgets && data.customWidgets.length && !(await confirmCode(data.customWidgets.length))) return;
+        if (!(await confirmLocal(data))) return;
         commit(() => {
           const map = adoptCustomWidgets(data.customWidgets);
           FD.registerUserWidgets(cfg);
@@ -631,6 +632,21 @@
     pop.querySelectorAll('[data-copy]').forEach((b) => b.onclick = () => { navigator.clipboard.writeText(b.dataset.copy).then(() => toast('Link copied')); });
   }
 
+  // Updates: newer versions fix problems, including security ones, so FrameDeck says when one is out.
+  let update = null;
+  async function checkUpdate() {
+    try { update = await api('/api/update'); } catch { update = null; }
+    if (update && update.newer && !checkUpdate.told) { checkUpdate.told = true; toast(FD.tr('A new version of FrameDeck is available. See Settings.')); }
+  }
+
+  // Settings → Advanced protection. Each one is on (protected) unless cfg.security[key] is true.
+  const PROTECTIONS = [
+    ['widgetsLocalNetwork', 'Keep custom widgets and skins off my local network', 'Off lets them reach devices like Home Assistant or a NAS from this computer, but a widget or skin from someone else could too.'],
+    ['skipImportWarnings', 'Warn me about risky imports', 'Off imports layouts, presets and widgets without asking, even when they contain code or point at your own network.'],
+    ['webPermissions', 'Block camera, microphone and location for web pages', 'Off lets web pages shown in widgets ask to use them.'],
+  ];
+  const relaxedProtections = () => PROTECTIONS.filter(([k]) => (cfg.security || {})[k]).map(([k]) => k);
+
   async function renderSettingsPop() {
     try { info = await api('/api/info'); } catch {}
     const pop = $('#settingsPop');
@@ -641,9 +657,24 @@
       <p class="note">Lets phones, tablets and other computers on your Wi-Fi open display links. The editor stays on this computer only.</p>
       ${info.loginItem !== null && info.loginItem !== undefined ? `<div class="field inline"><span>Open FrameDeck when I log in</span><label class="switch"><input type="checkbox" id="loginToggle" ${info.loginItem ? 'checked' : ''}><i></i></label></div>
       <p class="note">Displays that were showing when you quit open again automatically.</p>` : ''}
+      ${cfg.checkUpdates === false ? '' : update && update.newer ? `<p class="note warn">FrameDeck ${esc(update.latest)} is available. <a href="${esc(update.url)}" target="_blank" style="color:var(--ui-accent)">Download it</a></p>` : ''}
+      <div class="field inline"><span>Check for updates</span><label class="switch"><input type="checkbox" id="updToggle" ${cfg.checkUpdates === false ? '' : 'checked'}><i></i></label></div>
+      <details class="adv" ${relaxedProtections().length ? 'open' : ''}><summary>Advanced protection</summary>
+        <p class="note">These protect your computer from things you import or show. Turn one off only if you need to, and turn it back on afterwards.</p>
+        ${PROTECTIONS.map(([k, label, note]) => `<div class="field inline"><span>${esc(label)}</span><label class="switch"><input type="checkbox" data-protect="${k}" ${(cfg.security || {})[k] ? '' : 'checked'}><i></i></label></div><p class="note">${esc(note)}</p>`).join('')}
+        ${relaxedProtections().length ? '<p class="note warn">⚠ Some protections are off. Your computer is easier to attack while they are.</p>' : ''}
+      </details>
       ${isSupporter() ? `<p class="note">♥ Supporter: ${esc(info.supporter.name)}</p>` : ''}
       <p class="note">FrameDeck ${esc(info.version || '')}${FD.PROJECT && FD.PROJECT.github ? ` · <a href="${esc(FD.PROJECT.github)}" target="_blank" style="color:var(--ui-accent)">GitHub</a>` : ''} · inspired by <a href="https://github.com/Feeengyuuu/EpaperSystem" target="_blank" style="color:var(--ui-accent)">EpaperSystem</a> by Feeengyuuu, which builds on <a href="https://github.com/fatihak/InkyPi" target="_blank" style="color:var(--ui-accent)">InkyPi</a>. Weather from Open-Meteo.</p>`;
     $('#langSel').onchange = (e) => setLanguage(e.target.value);
+    $('#updToggle').onchange = (e) => { commit(() => { cfg.checkUpdates = e.target.checked; }, { rerender: 'none' }); if (e.target.checked) checkUpdate(); };
+    pop.querySelectorAll('[data-protect]').forEach((t) => t.onchange = () => {
+      const key = t.dataset.protect;
+      // Switched on = protected. Turning one off needs a clear yes.
+      if (!t.checked && !confirm('Turning this protection off means your computer could be attacked through what you import or show in FrameDeck (a shared layout, a skin, a feed or a web page). Only do this if you trust everything you use with FrameDeck.\n\nTurn it off?')) { t.checked = true; return; }
+      commit(() => { cfg.security = { ...(cfg.security || {}), [key]: !t.checked }; }, { rerender: 'none' });
+      renderSettingsPop();
+    });
     $('#lanToggle').onchange = (e) => {
       commit(() => { cfg.shareOnLan = e.target.checked; }, { rerender: 'none' });
       setTimeout(async () => { try { info = await api('/api/info'); } catch {} renderSettingsPop(); }, 800);
@@ -780,6 +811,30 @@
     es.addEventListener('displays', refreshDisplays);
   }
 
+  // Addresses on this computer or the local network inside an imported file. FrameDeck fetches
+  // feeds from this computer, so a stranger's layout could make it contact your router or NAS.
+  function localAddresses(data) {
+    const found = new Set();
+    const isLocal = (h) => h === 'localhost' || !h.includes('.') || /\.(local|lan|home|internal|localhost)$/.test(h) ||
+      /^(127\.|10\.|192\.168\.|169\.254\.|0\.)/.test(h) || /^172\.(1[6-9]|2\d|3[01])\./.test(h) || /^(::1|f[cd][0-9a-f]*:)/.test(h);
+    const walk = (v, depth = 0) => {
+      if (depth > 20) return;
+      if (typeof v === 'string') {
+        for (const m of v.matchAll(/\b(?:https?|webcal|wss?):\/\/(\[[^\]]+\]|[^/\s:"'?#]+)/gi)) {
+          const host = m[1].toLowerCase().replace(/^\[|\]$/g, '');
+          if (isLocal(host)) found.add(host);
+        }
+      } else if (v && typeof v === 'object') for (const x of Object.values(v)) walk(x, depth + 1);
+    };
+    walk(data);
+    return [...found];
+  }
+  async function confirmLocal(data) {
+    const hosts = localAddresses(data);
+    if (!hosts.length || (cfg.security || {}).skipImportWarnings) return true;
+    return confirm(`This file points at devices on your own network (${hosts.slice(0, 5).join(', ')}). FrameDeck would contact them from this computer. Only import it if you trust where it came from.\n\nImport it?`);
+  }
+
   // ======================================================================
   // Small text prompt (Electron has no window.prompt)
   // ======================================================================
@@ -829,7 +884,9 @@
   }
   const remapTypes = (widgets, map) => widgets.forEach((w) => { if (map[w.type]) w.type = map[w.type]; });
 
-  async function confirmCode(n) {
+  async function confirmCode(n, risks = 0) {
+    if ((cfg.security || {}).skipImportWarnings) return true;
+    if (risks) return confirm(`The code check found ${risks} risky pattern${risks > 1 ? 's' : ''} in this widget (open it in Widget Studio to see them). Widgets run in a sandbox and can only load data from the public internet, but only import files from people you trust.\n\nImport it?`);
     return confirm(`This file contains ${n} custom widget${n > 1 ? 's' : ''} with code. Widgets run in a sandbox and can only load data from the public internet, but only import files from people you trust.\n\nImport it?`);
   }
 
@@ -923,6 +980,19 @@
     box.scrollTop = box.scrollHeight;
   }
 
+  // The code check (app/shared/codecheck.js): risky patterns and tips, at the top of the console.
+  function showChecks() {
+    const found = FD.checkWidget ? FD.checkWidget(studio.js, studio.css) : [];
+    const box = $('#stLog');
+    for (const f of found) {
+      const row = document.createElement('div');
+      row.className = 'log chk ' + f.level;
+      row.innerHTML = `<button class="ln" data-line="${f.line}" data-tab="${f.css ? 'css' : 'js'}">${f.css ? 'CSS ' : ''}line ${f.line}</button><span><b>${f.level === 'risk' ? '⚠ ' + esc(FD.tr('Risk')) : '💡 ' + esc(FD.tr('Tip'))}</b> ${esc(f.text)}</span>`;
+      box.appendChild(row);
+    }
+    return found;
+  }
+
   // Run the code in three preview sizes.
   let runSeq = 0, metaWait = null;
   function runStudio() {
@@ -931,6 +1001,7 @@
     studio.views = [];
     studio.meta = null;
     $('#stLog').innerHTML = '';
+    showChecks();
     FD.WIDGETS.__studio = FD.makeFrameDef({ source: studio.js, css: studio.css, meta: { name: 'Preview', settings: [] } });
     // Settings come from the widget's own defaults (via meta), plus the instance it was opened from.
     const inst = studio.fromWidget && pageOf() && pageOf().widgets.find((w) => w.id === studio.fromWidget);
@@ -1108,8 +1179,9 @@
     };
     $('#stLog').addEventListener('click', (e) => {
       const b = e.target.closest('[data-line]'); if (!b) return;
-      setTab('js');
-      const lines = studio.js.split('\n');
+      const tab = b.dataset.tab === 'css' ? 'css' : 'js';
+      setTab(tab);
+      const lines = (tab === 'css' ? studio.css : studio.js).split('\n');
       const n = Math.min(lines.length, Number(b.dataset.line));
       const pos = lines.slice(0, n - 1).join('\n').length + (n > 1 ? 1 : 0);
       code.focus(); code.setSelectionRange(pos, pos + lines[n - 1].length);
@@ -1122,7 +1194,8 @@
       const data = JSON.parse(await file.text());
       const w = data.widget;
       if (data.framedeck !== 'widget' || !w || typeof w.source !== 'string') throw new Error('Not a FrameDeck widget file');
-      if (!(await confirmCode(1))) return;
+      const risks = FD.checkWidget ? FD.checkWidget(w.source, w.css || '').filter((f) => f.level === 'risk').length : 0;
+      if (!(await confirmCode(1, risks))) return;
       const meta = w.meta || await FD.extractMeta({ source: w.source, css: w.css || '' });
       if (!meta) throw new Error('The widget code has errors');
       commit(() => { cfg.customWidgets = cfg.customWidgets || []; cfg.customWidgets.push({ id: FD.uid(), source: w.source, css: w.css || '', meta }); });
@@ -1239,6 +1312,7 @@
         const data = JSON.parse(await f.text());
         if (data.framedeck !== 'page-preset' || !data.preset || !Array.isArray(data.preset.widgets)) throw new Error('Not a FrameDeck page preset');
         if (data.customWidgets && data.customWidgets.length && !(await confirmCode(data.customWidgets.length))) return;
+        if (!(await confirmLocal(data))) return;
         commit(() => {
           const map = adoptCustomWidgets(data.customWidgets);
           const widgets = data.preset.widgets.filter((w) => w && typeof w.type === 'string');
@@ -1662,5 +1736,6 @@
     await refreshDisplays();
     renderAll();
     if (!cfg.language) askLanguage();
+    checkUpdate();
   })().catch((err) => { document.body.innerHTML = `<p style="padding:40px">FrameDeck couldn't load: ${esc(err.message)}</p>`; });
 })();

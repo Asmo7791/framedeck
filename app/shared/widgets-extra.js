@@ -52,7 +52,8 @@
     if (f < minF) { f = minF; per = Math.max(1, Math.floor((ctx.h / f - 1.5) / 2.4)); }
     const pages = Math.max(1, Math.ceil(items.length / per));
     st.page = Math.min(st.page, pages - 1);
-    const open = (url) => { if (url) window.open(url, '_blank', 'noopener'); };
+    // Feed links come from the internet: only open web pages.
+    const open = (url) => { if (/^https?:\/\//i.test(url || '')) window.open(url, '_blank', 'noopener'); };
 
     function list() {
       st.reader = -1;

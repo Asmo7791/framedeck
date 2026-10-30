@@ -292,6 +292,24 @@
     'FrameDeck {0} · inspired by <a href="https://github.com/Feeengyuuu/EpaperSystem" target="_blank" style="color:var(--ui-accent)">EpaperSystem</a> by Feeengyuuu, which builds on <a href="https://github.com/fatihak/InkyPi" target="_blank" style="color:var(--ui-accent)">InkyPi</a>. Weather from Open-Meteo.':
       'FrameDeck {0} · 靈感來自 Feeengyuuu 的 <a href="https://github.com/Feeengyuuu/EpaperSystem" target="_blank" style="color:var(--ui-accent)">EpaperSystem</a>（基於 <a href="https://github.com/fatihak/InkyPi" target="_blank" style="color:var(--ui-accent)">InkyPi</a>）。天氣資料來自 Open-Meteo。',
 
+    'Advanced protection': '高階保護',
+    'Risk': '風險', 'Tip': '建議',
+    'The code check found {0} risky pattern{1} in this widget (open it in Widget Studio to see them). Widgets run in a sandbox and can only load data from the public internet, but only import files from people you trust. Import it?': '程式碼檢查在這個小元件中發現 {0} 處有風險的寫法（在小元件工作室中開啟即可檢視）。小元件在沙盒中執行，只能讀取公共網際網路上的資料，但請只匯入你信任的人發來的檔案。\n\n要匯入嗎？',
+    'Check for updates': '檢查更新',
+    'FrameDeck {0} is available. <a href="{1}" target="_blank" style="color:var(--ui-accent)">Download it</a>': 'FrameDeck {0} 已釋出。<a href="{1}" target="_blank" style="color:var(--ui-accent)">下載</a>',
+    'A new version of FrameDeck is available. See Settings.': 'FrameDeck 有新版本了。請檢視「設定」。',
+    'These protect your computer from things you import or show. Turn one off only if you need to, and turn it back on afterwards.': '這些設定保護你的電腦免受匯入或顯示的內容攻擊。只在確實需要時關閉，用完後請重新開啟。',
+    'Keep custom widgets and skins off my local network': '禁止自定義小元件和皮膚訪問我的區域網',
+    'Off lets them reach devices like Home Assistant or a NAS from this computer, but a widget or skin from someone else could too.': '關閉後，它們可以從這臺電腦訪問 Home Assistant 或 NAS 等裝置，但別人做的小元件或皮膚也能這樣做。',
+    'Warn me about risky imports': '匯入有風險的內容時提醒我',
+    'Off imports layouts, presets and widgets without asking, even when they contain code or point at your own network.': '關閉後，匯入佈局、預設和小元件時不再詢問，即使其中包含程式碼或指向你自己的網路。',
+    'Block camera, microphone and location for web pages': '禁止網頁使用攝像頭、麥克風和位置',
+    'Off lets web pages shown in widgets ask to use them.': '關閉後，小元件中顯示的網頁可以請求使用這些功能。',
+    '⚠ Some protections are off. Your computer is easier to attack while they are.': '⚠ 部分保護已關閉。在此期間你的電腦更容易受到攻擊。',
+    'Turning this protection off means your computer could be attacked through what you import or show in FrameDeck (a shared layout, a skin, a feed or a web page). Only do this if you trust everything you use with FrameDeck. Turn it off?': '關閉這項保護後，你的電腦可能會透過你在 FrameDeck 中匯入或顯示的內容（共享的佈局、皮膚、訂閱源或網頁）受到攻擊。只有在你信任與 FrameDeck 一起使用的所有內容時才這樣做。\n\n要關閉嗎？',
+    'This file points at devices on your own network ({0}). FrameDeck would contact them from this computer. Only import it if you trust where it came from. Import it?': '這個檔案指向你自己網路中的裝置（{0}）。FrameDeck 會從這臺電腦聯絡它們。只有在你信任檔案來源時才匯入。\n\n要匯入嗎？',
+    "Too many requests. Try again in a minute.": '請求太多。請一分鐘後再試。',
+
     // ---------- support ----------
     '♥ Support FrameDeck': '♥ 支援 FrameDeck',
     "FrameDeck is free and open source. If it's useful to you, a donation of any size keeps it going.": 'FrameDeck 免費且開源。如果它對你有用，任何金額的捐助都能幫助它繼續下去。',

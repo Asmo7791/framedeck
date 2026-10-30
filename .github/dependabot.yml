@@ -1,0 +1,12 @@
+# Opens pull requests when FrameDeck's dependencies or the GitHub Actions it uses have updates,
+# including security fixes. Review them like any other change.
+version: 2
+updates:
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly

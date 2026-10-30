@@ -296,7 +296,8 @@
       { key: 'color', label: 'Color', type: 'select', default: 'fg', options: [['fg', 'Text'], ['accent', 'Accent'], ['muted', 'Muted']] },
     ],
     render(el, s) {
-      el.innerHTML = `<div class="w-note" style="text-align:${esc(s.align)};justify-content:${s.align === 'left' ? 'flex-start' : s.align === 'right' ? 'flex-end' : 'center'}">
+      const align = ['left', 'right'].includes(s.align) ? s.align : 'center'; // never raw CSS from a layout file
+      el.innerHTML = `<div class="w-note" style="text-align:${align};justify-content:${s.align === 'left' ? 'flex-start' : s.align === 'right' ? 'flex-end' : 'center'}">
         <div class="w-note-text" style="font-weight:${esc(s.weight)};color:var(--${esc(s.color || 'fg')})">${esc(s.text).replace(/\n/g, '<br>')}</div></div>`;
       const t = el.querySelector('.w-note-text');
       requestAnimationFrame(() => FD.fitText(t, { max: 260 }));

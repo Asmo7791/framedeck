@@ -69,6 +69,15 @@ export class Activations {
   }
 }
 
+// Compare secrets in constant time, so the admin token can't be guessed from response times.
+async function sameText(a, b) {
+  const [x, y] = await Promise.all([a, b].map((t) => crypto.subtle.digest('SHA-256', new TextEncoder().encode(t))));
+  const p = new Uint8Array(x), q = new Uint8Array(y);
+  let diff = 0;
+  for (let i = 0; i < p.length; i++) diff |= p[i] ^ q[i];
+  return diff === 0;
+}
+
 async function activations(request, env, path) {
   if (request.method !== 'POST') return json({ error: 'Not found' }, 404);
   if (!env.ACTIVATIONS) return json({ error: 'Key activation isn\'t set up on this relay' }, 503);
@@ -76,7 +85,7 @@ async function activations(request, env, path) {
   // Trimmed, since a pasted secret easily picks up a line break.
   const adminToken = String(env.ADMIN_TOKEN || '').trim();
   if (admin && !adminToken) return json({ error: 'The relay has no ADMIN_TOKEN secret yet' }, 403);
-  if (admin && (request.headers.get('authorization') || '').trim() !== 'Bearer ' + adminToken) return json({ error: 'Not allowed' }, 403);
+  if (admin && !(await sameText((request.headers.get('authorization') || '').trim(), 'Bearer ' + adminToken))) return json({ error: 'Not allowed' }, 403);
   let body;
   try { body = await request.json(); } catch { return json({ error: 'Bad request' }, 400); }
   const key = await realKey(body.key, env.SUPPORTER_PUBLIC_KEY || SUPPORTER_PUBLIC_KEY);
@@ -146,7 +155,8 @@ export default {
     if (!env.PANDASCORE_TOKEN) return json({ error: 'The relay has no PandaScore token yet' }, 503);
 
     const [, game, kind] = m;
-    const perPage = Math.min(20, Math.max(1, Number(url.searchParams.get('per_page')) || 10));
+    // Always 10: varying per_page would dodge the cache and use up the shared PandaScore quota.
+    const perPage = 10;
     const ttl = CACHE_SECONDS[kind];
     // Cache by game, kind and size only, so every user shares the same cached answer.
     const key = new Request(`https://framedeck-relay.cache/${game}/${kind}?per_page=${perPage}`);

@@ -37,6 +37,8 @@ const LOOPBACK = new Set(['127.0.0.1', '::1', '::ffff:127.0.0.1']);
 
 function createServer({ dataDir, staticDir, hooks = {}, port = 47820, addons = [] }) {
   fs.mkdirSync(dataDir, { recursive: true });
+  // Only this user may read the data folder: it holds private calendar links and tokens.
+  if (process.platform !== 'win32') { try { fs.chmodSync(dataDir, 0o700); } catch { /* not ours to change */ } }
   const mediaDir = path.join(dataDir, 'media');
   fs.mkdirSync(mediaDir, { recursive: true });
   const configPath = path.join(dataDir, 'config.json');
@@ -56,7 +58,7 @@ function createServer({ dataDir, staticDir, hooks = {}, port = 47820, addons = [
 
   function saveConfig() {
     const tmp = configPath + '.tmp';
-    fs.writeFileSync(tmp, JSON.stringify(config, null, 2));
+    fs.writeFileSync(tmp, JSON.stringify(config, null, 2), { mode: 0o600 });
     fs.renameSync(tmp, configPath);
   }
 
@@ -141,7 +143,24 @@ function createServer({ dataDir, staticDir, hooks = {}, port = 47820, addons = [
     return null;
   }
 
+  // Is there a newer published release? Asked of GitHub at most every 6 hours.
+  const RELEASES = 'https://github.com/Asmo7791/framedeck/releases/latest';
+  let updateCache = { at: 0, value: null };
+  const versionParts = (v) => String(v || '').replace(/^v/, '').split('.').map((n) => parseInt(n, 10) || 0);
+  const newer = (a, b) => { const x = versionParts(a), y = versionParts(b); for (let i = 0; i < 3; i++) if ((x[i] || 0) !== (y[i] || 0)) return (x[i] || 0) > (y[i] || 0); return false; };
+
   const api = {
+    'GET /api/update': async () => {
+      if (config.checkUpdates === false) return { disabled: true };
+      if (!updateCache.value || Date.now() - updateCache.at > 6 * 3600000) {
+        try {
+          const latest = await getJSON('https://api.github.com/repos/Asmo7791/framedeck/releases/latest');
+          updateCache = { at: Date.now(), value: { latest: String(latest.tag_name || '').replace(/^v/, '') } };
+        } catch { return { error: true }; }
+      }
+      const current = hooks.version || '0.0.0';
+      return { current, latest: updateCache.value.latest, newer: newer(updateCache.value.latest, current), url: RELEASES };
+    },
     // Interactive widgets (water, habits, pomodoro, move breaks). Displays on other devices
     // may change these, so only these widget types and their checked actions are accepted.
     'GET /api/state': (req, url) => {
@@ -313,7 +332,7 @@ function createServer({ dataDir, staticDir, hooks = {}, port = 47820, addons = [
     },
   };
   // Anything that changes state or touches this computer is only allowed from this computer.
-  const LOCAL_ONLY = new Set(['PUT /api/config', 'POST /api/media', 'GET /api/displays',
+  const LOCAL_ONLY = new Set(['GET /api/update', 'PUT /api/config', 'POST /api/media', 'GET /api/displays',
     'POST /api/open-display', 'POST /api/close-display', 'POST /api/login-item', 'POST /api/supporter']);
 
   // ---------- add-ons (src/addons.js) ----------
@@ -390,6 +409,22 @@ function createServer({ dataDir, staticDir, hooks = {}, port = 47820, addons = [
     });
   }
 
+  // Other devices on the network may only make so many fetch requests, so a shared display
+  // can't be used as a free proxy through this computer's internet connection.
+  const FETCH_ROUTES = new Set(['GET /api/fetch', 'GET /api/rss', 'GET /api/ics']);
+  const buckets = new Map();
+  function withinRate(ip) {
+    const now = Date.now();
+    const b = buckets.get(ip) || { tokens: 60, at: now };
+    b.tokens = Math.min(60, b.tokens + ((now - b.at) / 60000) * 60);
+    b.at = now;
+    buckets.set(ip, b);
+    if (buckets.size > 1000) buckets.clear();
+    if (b.tokens < 1) return false;
+    b.tokens -= 1;
+    return true;
+  }
+
   const server = http.createServer(async (req, res) => {
     const url = new URL(req.url, 'http://local');
     // Requests a custom widget makes through the app's bridge are treated like requests
@@ -417,10 +452,14 @@ function createServer({ dataDir, staticDir, hooks = {}, port = 47820, addons = [
           return send(res, 403, { error: 'Not allowed from another site' });
         }
         if ((LOCAL_ONLY.has(route) || addonLocalOnly.has(route)) && !local) return send(res, 403, { error: 'Only allowed from this computer' });
+        if (!local && FETCH_ROUTES.has(route) && !withinRate(req.socket.remoteAddress)) return send(res, 429, { error: 'Too many requests. Try again in a minute.' });
         // Changes need a custom header, which browsers won't send cross-site without permission,
         // so a web page (or a custom widget frame) can't quietly call these endpoints.
         if (req.method !== 'GET' && req.headers['x-framedeck'] !== '1') return send(res, 403, { error: 'Missing FrameDeck header' });
-        const out = await handler(req, url, local);
+        // Settings → Advanced protection can let custom widgets and skins on this computer reach
+        // the local network (Home Assistant, a NAS...). Only fetches change; nothing else does.
+        const reach = local || (LOOPBACK.has(req.socket.remoteAddress) && !!(config.security || {}).widgetsLocalNetwork && FETCH_ROUTES.has(route));
+        const out = await handler(req, url, reach);
         if (out && out[RAW]) { res.writeHead(200, { 'content-type': out.type || 'application/octet-stream', 'cache-control': 'no-store' }); return res.end(out.body); }
         return send(res, 200, out);
       }

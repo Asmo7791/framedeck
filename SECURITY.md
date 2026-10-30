@@ -13,6 +13,16 @@ FrameDeck runs a small web server on your computer (port 47820 by default) so di
 - Rainmeter skins are imported without their plugins or programs, their formulas are evaluated without running code, they are drawn on a canvas, and their web requests can only reach public addresses.
 - Custom widgets run in a sandbox, can't reach FrameDeck's settings, and can only load public internet addresses.
 
+## The app
+
+- Links from widgets only open web pages (http, https, mail) in your browser; app windows can't be sent to other sites, and web pages in widgets get no camera, microphone, location or notifications.
+- The data folder is readable only by your user account.
+- FrameDeck checks GitHub for a newer version (Settings → Check for updates) so security fixes reach you. It sends nothing but the request.
+
+## Advanced protection
+
+Settings → Advanced protection lets you turn three protections off when they get in your way: letting custom widgets and skins reach your local network, skipping import warnings, and letting web pages use the camera, microphone and location. Each asks you to confirm, and Settings shows a warning while any is off, because your computer is easier to attack then. The other protections can't be turned off: they never get in the way of normal use.
+
 ## Reporting a problem
 
 Please don't open a public issue for security problems. Use GitHub's **[private vulnerability reporting](https://github.com/Asmo7791/framedeck/security/advisories/new)** instead, with steps to reproduce. I'll reply as soon as I can.

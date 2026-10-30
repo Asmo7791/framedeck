@@ -1,5 +1,5 @@
 'use strict';
-const { app, BrowserWindow, screen: electronScreen, shell, Menu, dialog } = require('electron');
+const { app, BrowserWindow, screen: electronScreen, shell, Menu, dialog, session } = require('electron');
 const path = require('path');
 const { createServer } = require('./server');
 const { loadAddons } = require('./addons');
@@ -14,6 +14,19 @@ let editorWin = null;
 const displayWins = new Map(); // key -> { win, screenId, displayId, mode }
 
 function baseUrl() { return `http://127.0.0.1:${server.port}`; }
+
+// Links from widgets (a news feed's "Open article", say) come from the internet. Only web and
+// mail links go to the system; anything else (file:, app schemes...) could start a program.
+function openSafe(url) {
+  try { if (['http:', 'https:', 'mailto:'].includes(new URL(url).protocol)) shell.openExternal(url); } catch { /* not a URL */ }
+}
+const isOwnPage = (url) => { try { return new URL(url).origin === new URL(baseUrl()).origin; } catch { return false; } };
+
+// Every window: stays on FrameDeck's own pages, opens other links in the browser, no <webview>.
+app.on('web-contents-created', (e, contents) => {
+  contents.on('will-navigate', (ev, url) => { if (!isOwnPage(url)) { ev.preventDefault(); openSafe(url); } });
+  contents.on('will-attach-webview', (ev) => ev.preventDefault());
+});
 
 function listDisplays() {
   const primary = electronScreen.getPrimaryDisplay().id;
@@ -78,7 +91,7 @@ function openDisplay({ screenId, displayId, mode = 'fullscreen' }) {
   });
   if (mode === 'window') win.setAspectRatio(scr.profile.w / scr.profile.h);
   win.loadURL(`${baseUrl()}/display.html?screen=${encodeURIComponent(screenId)}&app=1`);
-  win.webContents.setWindowOpenHandler(({ url }) => { shell.openExternal(url); return { action: 'deny' }; });
+  win.webContents.setWindowOpenHandler(({ url }) => { openSafe(url); return { action: 'deny' }; });
   win.webContents.on('before-input-event', (e, input) => {
     if (input.type === 'keyDown' && input.key === 'Escape') { e.preventDefault(); win.close(); }
   });
@@ -113,10 +126,10 @@ function openEditor() {
   });
   editorWin.loadURL(`${baseUrl()}/editor.html`);
   editorWin.webContents.setWindowOpenHandler(({ url }) => {
-    if (url.startsWith(baseUrl()) && url.includes('display.html')) {
+    if (isOwnPage(url) && new URL(url).pathname === '/display.html') {
       return { action: 'allow', overrideBrowserWindowOptions: { width: 960, height: 600, autoHideMenuBar: true } };
     }
-    shell.openExternal(url);
+    openSafe(url);
     return { action: 'deny' };
   });
   editorWin.on('closed', () => { editorWin = null; });
@@ -195,6 +208,15 @@ app.on('activate', openEditor);
 app.on('window-all-closed', () => { if (process.platform !== 'darwin') app.quit(); });
 
 app.whenReady().then(async () => {
+  // Web pages shown in widgets get no camera, microphone, location, notifications...
+  // Electron would otherwise allow every request. Fullscreen is all FrameDeck itself uses.
+  // Settings → Advanced protection can allow camera, microphone, location and notifications.
+  const allowed = new Set(['fullscreen', 'clipboard-sanitized-write']);
+  const relaxed = new Set(['media', 'geolocation', 'notifications']);
+  const permitted = (p) => allowed.has(p) || (relaxed.has(p) && !!(server && (server.config.security || {}).webPermissions));
+  session.defaultSession.setPermissionRequestHandler((wc, permission, cb) => cb(permitted(permission)));
+  session.defaultSession.setPermissionCheckHandler((wc, permission) => permitted(permission));
+
   server = createServer({
     dataDir: app.getPath('userData'),
     staticDir: path.join(__dirname, '..', 'app'),

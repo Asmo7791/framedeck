@@ -37,6 +37,16 @@ for (const name of fs.existsSync(path.join(root, 'addons')) ? fs.readdirSync(pat
   }
 }
 
+// 1c. Widget Studio's code check flags real risks and leaves clean code alone.
+{
+  const { checkWidget } = require(path.join(root, 'app/shared/codecheck.js'));
+  const risky = "widget({ name: 'x', render(el, s, ctx) { const d = ctx.data;\n el.innerHTML = `<b>${d.title}</b>`;\n eval('1');\n const apiKey = 'sk_live_1234567890';\n } });";
+  const found = checkWidget(risky, '').filter((f) => f.level === 'risk').map((f) => f.line);
+  ok(found.join() === '2,3,4', 'the code check finds unescaped data, eval and secrets, with line numbers');
+  const clean = "widget({ name: 'ok', render(el, s, ctx) { const d = ctx.data; el.innerHTML = `<b>${esc(d.title)}</b> ${d.items.length} ${d.live ? 'Live' : 'Final'}`; } });";
+  ok(checkWidget(clean, '').length === 0, 'the code check leaves clean widgets alone');
+}
+
 // 2. Supporter keys: the embedded public key must be a valid Ed25519 key.
 const { verifyKey } = require(path.join(root, 'src/license.js'));
 ok(verifyKey('FD1-e30.AAAA') === null, 'rejects a forged supporter key');
@@ -105,6 +115,23 @@ try {
     ok((await act({ id: 'w-water', op: 'explode' })).status === 400 && (await act({ id: 'w-hab', op: 'toggle', habit: 999 })).status === 400, 'state: unknown actions and bad values are refused');
     ok((await act({ id: cur.screens[0].pages[0].widgets[0].id, op: 'add' })).status === 404, 'state: only interactive widgets have state');
     ok((await act({ id: 'w-water', op: 'add' }, { 'x-framedeck': '' })).status === 403, 'state changes need the FrameDeck header');
+  }
+
+  // Protections from the security review.
+  {
+    if (process.platform !== 'win32') ok((fs.statSync(path.join(dataDir, 'config.json')).mode & 0o077) === 0, 'the config file is readable only by this user');
+    ok((await get('/api/update', { 'x-framedeck-sandbox': '1' })).status === 403, 'the update check only runs from this computer');
+    const lan = http.createServer((q, r) => r.end('<rss><channel><title>Home</title></channel></rss>'));
+    await new Promise((resolve) => lan.listen(0, '127.0.0.1', resolve));
+    const lanUrl = '/api/fetch?url=' + encodeURIComponent(`http://127.0.0.1:${lan.address().port}/`);
+    const asWidget = { 'x-framedeck-sandbox': '1' };
+    ok((await get(lanUrl, asWidget)).status === 403, 'custom widgets stay off the local network by default');
+    const cur = (await (await get('/api/config')).json()).config;
+    const setSecurity = (security) => fetch(base + '/api/config', { method: 'PUT', headers: { 'x-framedeck': '1' }, body: JSON.stringify({ config: { ...cur, security } }) });
+    await setSecurity({ widgetsLocalNetwork: true });
+    ok((await get(lanUrl, asWidget)).status === 200, 'Advanced protection can let them reach it, when the user says so');
+    await setSecurity({});
+    lan.close();
   }
 
   // Add-ons are served through the core's generic hooks, with the same rules as the core API.
@@ -234,6 +261,12 @@ try {
     delete process.env.FRAMEDECK_ESPORTS_RELAY;
     globalThis.fetch = realFetch;
     relayServer.close();
+  }
+  // Other devices get 60 fetches a minute. (Last, since it uses up the allowance.)
+  {
+    let last = 0;
+    for (let i = 0; i < 70 && last !== 429; i++) last = (await get('/api/fetch?url=x', { 'x-framedeck-sandbox': '1' })).status;
+    ok(last === 429, 'other devices are rate-limited on fetches');
   }
 } finally {
   server.close();

@@ -1,5 +1,17 @@
 # Changelog
 
+## 0.5.1 (security)
+
+- Links from widgets (like a news feed's "Open article") only open web pages, never files or other programs. App windows stay on FrameDeck's own pages.
+- Web pages shown in widgets can't use the camera, microphone, location or notifications.
+- Importing a layout or preset that points at devices on your own network (a router, a NAS) now asks first.
+- The data folder and settings file are readable only by you.
+- Other devices on your network can make at most 60 fetch requests a minute through FrameDeck.
+- **Check for updates** (Settings): FrameDeck tells you when a newer version is out.
+- **Advanced protection** (Settings): turn individual protections off when you need to, with a warning.
+- **Code check** in Widget Studio: points out risky code (text from data not escaped, eval, secrets in the code) and better ways to do common things, with line numbers.
+- Release builds use pinned versions of GitHub's build tools; Dependabot proposes dependency updates.
+
 ## 0.5.0
 
 - **Health widgets you can tap**: a **Pomodoro timer** (focus sessions, short and long breaks, optional chime), a **Water tracker** (tap ＋ for each glass, daily goal and reminders), a **Habit tracker** (tick off habits, 7-day view and streaks) and **Move breaks** (a countdown to your next stretch).

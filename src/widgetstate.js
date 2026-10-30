@@ -66,7 +66,7 @@ function stateStore(dataDir) {
     clearTimeout(timer);
     timer = setTimeout(() => {
       const tmp = file + '.tmp';
-      fs.writeFileSync(tmp, JSON.stringify(all));
+      fs.writeFileSync(tmp, JSON.stringify(all), { mode: 0o600 });
       fs.renameSync(tmp, file);
     }, 300);
   };

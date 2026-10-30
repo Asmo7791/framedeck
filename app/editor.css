@@ -323,3 +323,13 @@ a.pay:hover { border-color: var(--ui-accent); }
 .lang-choice { font: inherit; font-size: 17px; padding: 14px 16px; border-radius: 12px; border: 1px solid var(--ui-line, #2a2f3a); background: transparent; color: inherit; cursor: pointer; text-align: left; }
 .lang-choice:hover { border-color: var(--ui-accent); }
 .lang-choice.on { border-color: var(--ui-accent); background: color-mix(in srgb, var(--ui-accent) 14%, transparent); }
+
+/* Settings → Advanced protection */
+.popover details.adv { margin: 10px 0; border-top: 1px solid var(--ui-line); padding-top: 8px; }
+.popover details.adv summary { cursor: pointer; font-weight: 650; }
+
+/* Widget Studio code check */
+.log.chk { font-family: -apple-system, "Segoe UI", sans-serif; }
+.log.chk.risk { color: #ffcf8b; }
+.log.chk.tip { color: #9fc4ff; }
+.log.chk.tip .ln { background: #1b2433; color: #b9d3ff; }
