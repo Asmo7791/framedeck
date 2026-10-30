@@ -6,9 +6,9 @@ Design your own dashboard screens and show them on any display: a spare monitor,
 
 Instead of fixed pages, every screen is a grid you lay out yourself. Widgets pick their own layout from the space they get, so the same weather widget works as a tiny icon on a 240 px round screen and as a full forecast on a 4K monitor.
 
-[![Watch the 60-second FrameDeck video](docs/images/video-poster.jpg)](docs/media/framedeck-promo.mp4)
+[![Watch the 60-second FrameDeck video](docs/images/video-poster.jpg)](https://cdn.jsdelivr.net/gh/Asmo7791/framedeck@main/docs/media/framedeck-promo.mp4)
 
-▶️ **[Watch the 60-second video](docs/media/framedeck-promo.mp4)** · [15-second vertical cut](docs/media/framedeck-promo-vertical.mp4)
+▶️ **[Watch the 60-second video](https://cdn.jsdelivr.net/gh/Asmo7791/framedeck@main/docs/media/framedeck-promo.mp4)** · [15-second vertical cut](https://cdn.jsdelivr.net/gh/Asmo7791/framedeck@main/docs/media/framedeck-promo-vertical.mp4)
 
 ![The FrameDeck editor](docs/images/editor.png)
 
